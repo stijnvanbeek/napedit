@@ -23,6 +23,7 @@ namespace nap
             void addResourceToGroup(const std::string& groupID, const rttr::type& resourceType, const std::string& mID = "");
             void addGroupToParent(const std::string& newGroupID, const std::string& parentGroupID);
             void removeResource(const std::string& mID);
+            void renameResource(const std::string& mID, const std::string& newName);
             const std::map<std::string, std::unique_ptr<Resource>>& getResources() const { return mResources; }
 
         private:

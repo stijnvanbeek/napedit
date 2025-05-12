@@ -13,6 +13,7 @@ namespace nap
 
         ResourceListGui::ResourceListGui(Core &core): mCore(core)
         {
+            memset(mRenameBuffer, 0, sizeof(mRenameBuffer));
         }
 
 
@@ -66,41 +67,72 @@ namespace nap
         void ResourceListGui::draw()
         {
             // List of all resources
-            ImGui::ListBoxHeader("##ResourcesListBox", mModel->getResources().size(), 20);
+            ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
             int i = 0;
+            std::string newName;
             for (auto& resource : mModel->getResources())
             {
-                if (ImGui::Selectable(resource.first.c_str(), mSelectedID == resource.first))
-                    mSelectedID = resource.first;
+                bool renaming = false;
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf;
+                if (mSelectedID == resource.first)
+                {
+                    flags |= ImGuiTreeNodeFlags_Selected;
+                    if (mRenameMode)
+                    {
+                        renaming = true;
+                        if (ImGui::InputText("##RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+                            newName = mRenameBuffer;
+                    }
+                }
+                if (!renaming && ImGui::TreeNodeEx(resource.first.c_str(), flags))
+                {
+                    if (ImGui::IsItemClicked())
+                        mSelectedID = resource.first;
+
+                    ImGui::TreePop();
+                }
                 i++;
             }
-            ImGui::ListBoxFooter();
+            ImGui::EndChild();
+
+            if (!newName.empty())
+            {
+                mModel->renameResource(mSelectedID, newName);
+                mSelectedID = newName;
+                mRenameMode = false;
+            }
+
+            // Popup when right clicked on the resources list
+            std::string chosenPopup;
+            if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
+            {
+                if (ImGui::Selectable("Add resource"))
+                {
+                    chosenPopup = "##AddResourcePopup";
+                }
+                if (!mSelectedID.empty())
+                {
+                    if (ImGui::Selectable("Rename"))
+                    {
+                        strcpy(mRenameBuffer, mSelectedID.c_str());
+                        mRenameMode = true;
+                    }
+                    if (ImGui::Selectable(std::string("Remove " + mSelectedID).c_str()))
+                    {
+                        mModel->removeResource(mSelectedID);
+                        mSelectedID.clear();
+                    }
+                }
+                ImGui::EndPopup();
+            }
+
+            if (!chosenPopup.empty())
+                ImGui::OpenPopup(chosenPopup.c_str());
 
             if (ImGui::BeginPopup("##AddResourcePopup"))
             {
                 addResourcePopup();
                 ImGui::EndPopup();
-            }
-
-            // Popup when clicked on the resources list
-            if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
-            {
-                if (ImGui::Selectable("Add resource"))
-                {
-                    ImGui::EndPopup();
-                    ImGui::OpenPopup("##AddResourcePopup");
-                }
-                else if (!mSelectedID.empty())
-                {
-                    if (ImGui::Selectable(std::string("Remove " + mSelectedID).c_str()))
-                    {
-                        mModel->removeResource(mSelectedID);
-                    }
-                    ImGui::EndPopup();
-                }
-                else {
-                    ImGui::EndPopup();
-                }
             }
         }
 

@@ -59,6 +59,17 @@ namespace nap
         {
             mResources.erase(mID);
         }
+
+
+        void Model::renameResource(const std::string &mID, const std::string &newName)
+        {
+            auto pair = mResources.find(mID);
+            assert(pair != mResources.end());
+            pair->second->mID = newName;
+            mResources[newName] = std::move(pair->second);
+            mResources.erase(pair);
+        }
+
     }
 
 }

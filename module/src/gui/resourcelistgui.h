@@ -30,6 +30,8 @@ namespace nap
             std::map<std::string, const rtti::TypeInfo*> mFilteredTypes;
             int mSelectedType = -1;
             char mSearchFilter[128];
+            char mRenameBuffer[128];
+            bool mRenameMode = false;
 
             std::vector<ResourcePtr<Resource>> mTree;
             std::set<std::string> mExpandedIDs;
