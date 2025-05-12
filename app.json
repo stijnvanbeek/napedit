@@ -1,0 +1,13 @@
+{
+    "Type": "nap::ProjectInfo",
+    "mID": "ProjectInfo",
+    "Title": "napkin2",
+    "Version": "1.0.0",
+    "RequiredModules": [
+        "napnapkin2",
+        "napapp"
+    ],
+    "Data": "data/objects.json",
+    "ServiceConfig": "",
+    "PathMapping": "cache/path_mapping.json"
+}

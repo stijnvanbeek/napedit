@@ -1,0 +1,120 @@
+{
+    "Objects": [
+        {
+            "Type": "nap::RenderWindow",
+            "mID": "Window",
+            "Borderless": false,
+            "Resizable": true,
+            "Visible": true,
+            "SampleShading": true,
+            "Title": "Example Window",
+            "Width": 1280,
+            "Height": 720,
+            "Mode": "Immediate",
+            "ClearColor": {
+                "Values": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ]
+            },
+            "Samples": "Four",
+            "AdditionalSwapImages": 1,
+            "RestoreSize": true,
+            "RestorePosition": true
+        },
+        {
+            "Type": "nap::ResourceGroup",
+            "mID": "Gui",
+            "Members": [
+                {
+                    "Type": "nap::gui::GuiWindow",
+                    "mID": "MainWindow",
+                    "Title": "Main",
+                    "Style": "",
+                    "Position": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "Size": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "Flags": {
+                        "NoTitleBar": true,
+                        "NoResize": false,
+                        "NoMove": false,
+                        "NoScrollBar": false,
+                        "NoScrollWithMouse": false,
+                        "NoCollapse": false,
+                        "AlwaysAutoResize": true,
+                        "NoSavedSettings": true,
+                        "MenuBar": false,
+                        "HorizontalScrollBar": false,
+                        "CanClose": true
+                    },
+                    "Alpha": 1.0,
+                    "Open": true,
+                    "Border": true,
+                    "RenderWindow": "Window",
+                    "Content": {
+                        "Type": "nap::gui::Panel",
+                        "mID": "Panel",
+                        "Title": "Panel",
+                        "Style": "",
+                        "Position": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "Size": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "Flags": {
+                            "NoScrollBar": false,
+                            "NoScrollWithMouse": false,
+                            "HorizontalScrollBar": false
+                        },
+                        "Alpha": 1.0,
+                        "Border": true,
+                        "Content": {
+                            "Type": "nap::gui::HorizontalLayout",
+                            "mID": "HorizontalLayout",
+                            "Title": "",
+                            "Style": "",
+                            "ColumnWidths": [],
+                            "Borders": true,
+                            "Content": [
+                                {
+                                    "Type": "nap::gui::GuiLink",
+                                    "mID": "GuiLink",
+                                    "Title": "",
+                                    "Style": "",
+                                    "Link": "ResourceListGui"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Type": "nap::edit::ResourceListGui",
+                    "mID": "ResourceListGui",
+                    "Title": "",
+                    "Style": "",
+                    "Model": "Model"
+                }
+            ],
+            "Children": []
+        },
+        {
+            "Type": "nap::Scene",
+            "mID": "Scene",
+            "Entities": []
+        },
+        {
+            "Type": "nap::edit::Model",
+            "mID": "Model"
+        }
+    ]
+}
