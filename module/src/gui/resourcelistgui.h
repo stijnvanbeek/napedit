@@ -39,7 +39,8 @@ namespace nap
 
             std::string mSelectedID;
             std::string mEditedID;
-            std::string mRenamedID;
+            std::string mEnteredID;
+
             Core& mCore;
         };
 
@@ -54,11 +55,11 @@ namespace nap
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetTreeNodeToLabelSpacing(), 0));
                     if (ImGui::InputText("##RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
-                        mRenamedID = mRenameBuffer;
+                        mEnteredID = mRenameBuffer;
                     ImGui::PopStyleVar();
                 }
                 else {
-                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf;
+                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
                     if (mSelectedID == resource->mID)
                         flags |= ImGuiTreeNodeFlags_Selected;
                     if (ImGui::TreeNodeEx(resource->mID.c_str(), flags))
@@ -68,7 +69,7 @@ namespace nap
                             mEditedID = mSelectedID;
                             strcpy(mRenameBuffer, mEditedID.c_str());
                         }
-                        if (ImGui::IsItemClicked())
+                        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
                         {
                             mSelectedID = resource->mID;
                             mEditedID.clear();

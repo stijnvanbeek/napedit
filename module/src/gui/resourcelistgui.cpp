@@ -74,11 +74,11 @@ namespace nap
             drawTree(mModel->getTree().mChildren);
             ImGui::EndChild();
 
-            if (!mRenamedID.empty())
+            if (!mEnteredID.empty())
             {
-                mModel->renameResource(mSelectedID, mRenamedID);
-                mSelectedID = mRenamedID;
-                mRenamedID.clear();
+                mModel->renameResource(mSelectedID, mEnteredID);
+                mSelectedID = mEnteredID;
+                mEnteredID.clear();
                 mEditedID.clear();
             }
 
@@ -86,7 +86,7 @@ namespace nap
             std::string chosenPopup;
             if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
             {
-                if (ImGui::Selectable("Create resource"))
+                if (ImGui::Selectable("Create Resource..."))
                 {
                     chosenPopup = "##AddResourcePopup";
                 }

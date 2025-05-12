@@ -21,15 +21,34 @@ namespace nap
             auto mID = typeName;
             if (!aID.empty())
                 mID = aID;
-            int idCounter = 2;
-            while (findResource(mID) != nullptr)
+
+            mID = getUniqueID(mID);
+            if (!mID.empty())
             {
-                mID = typeName + std::to_string(idCounter);
-                idCounter++;
+                resource->mID = mID;
+                mResources.emplace_back(std::unique_ptr<Resource>(resource));
+                mTree.mMembers.emplace_back(resource);
             }
-            resource->mID = mID;
-            mResources.emplace_back(std::unique_ptr<Resource>(resource));
-            mTree.mMembers.emplace_back(resource);
+        }
+
+
+
+        void Model::createGroup(const rttr::type &groupType, const std::string &aID)
+        {
+            auto object = mCore.getResourceManager()->getFactory().create(groupType);
+            auto group = rtti_cast<ResourceGroup>(object);
+            assert(group != nullptr);
+            auto typeName = groupType.get_name().to_string();
+            auto mID = typeName;
+            if (!aID.empty())
+                mID = aID;
+            mID = getUniqueID(mID);
+            if (!mID.empty())
+            {
+                group->mID = mID;
+                mResources.emplace_back(std::unique_ptr<ResourceGroup>(group));
+                mTree.mChildren.emplace_back(group);
+            }
         }
 
 
@@ -72,11 +91,13 @@ namespace nap
         }
 
 
-        void Model::renameResource(const std::string &mID, const std::string &newName)
+        void Model::renameResource(const std::string &mID, const std::string &aNewName)
         {
             auto resource = findResource(mID);
             assert(resource != nullptr);
-            resource->mID = newName;
+            auto newName = getUniqueID(aNewName);
+            if (!newName.empty())
+                resource->mID = newName;
         }
 
 
@@ -127,6 +148,21 @@ namespace nap
             }
 
             return nullptr;
+        }
+
+
+        std::string Model::getUniqueID(const std::string &aBaseID)
+        {
+            auto baseID = aBaseID;
+            baseID = utility::replaceAllInstances(utility::trim(baseID), " ", "_");
+            int idCounter = 2;
+            auto mID = baseID;
+            while (findResource(mID) != nullptr)
+            {
+                mID = baseID + std::to_string(idCounter);
+                idCounter++;
+            }
+            return mID;
         }
 
     }
