@@ -1,5 +1,7 @@
 #include "resourcelistgui.h"
 
+#include "imgui_internal.h"
+
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceListGui)
     RTTI_CONSTRUCTOR(nap::Core&)
     RTTI_PROPERTY("Model", &nap::edit::ResourceListGui::mModel, nap::rtti::EPropertyMetaData::Required)
@@ -53,7 +55,7 @@ namespace nap
                         if (ImGui::Selectable(resourceTypePair->first.c_str(), i == mSelectedType))
                         {
                             mSelectedType = i;
-                            mModel->addResource(*resourceTypePair->second);
+                            mModel->createResource(*resourceTypePair->second);
                             ImGui::CloseCurrentPopup();
                         }
                         resourceTypePair++;
@@ -68,54 +70,32 @@ namespace nap
         {
             // List of all resources
             ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
-            int i = 0;
-            std::string newName;
-            for (auto& resource : mModel->getResources())
-            {
-                bool renaming = false;
-                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf;
-                if (mSelectedID == resource.first)
-                {
-                    flags |= ImGuiTreeNodeFlags_Selected;
-                    if (mRenameMode)
-                    {
-                        renaming = true;
-                        if (ImGui::InputText("##RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
-                            newName = mRenameBuffer;
-                    }
-                }
-                if (!renaming && ImGui::TreeNodeEx(resource.first.c_str(), flags))
-                {
-                    if (ImGui::IsItemClicked())
-                        mSelectedID = resource.first;
-
-                    ImGui::TreePop();
-                }
-                i++;
-            }
+            drawTree(mModel->getTree().mMembers);
+            drawTree(mModel->getTree().mChildren);
             ImGui::EndChild();
 
-            if (!newName.empty())
+            if (!mRenamedID.empty())
             {
-                mModel->renameResource(mSelectedID, newName);
-                mSelectedID = newName;
-                mRenameMode = false;
+                mModel->renameResource(mSelectedID, mRenamedID);
+                mSelectedID = mRenamedID;
+                mRenamedID.clear();
+                mEditedID.clear();
             }
 
             // Popup when right clicked on the resources list
             std::string chosenPopup;
             if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
             {
-                if (ImGui::Selectable("Add resource"))
+                if (ImGui::Selectable("Create resource"))
                 {
                     chosenPopup = "##AddResourcePopup";
                 }
                 if (!mSelectedID.empty())
                 {
-                    if (ImGui::Selectable("Rename"))
+                    if (ImGui::Selectable(std::string("Rename " + mSelectedID).c_str()))
                     {
-                        strcpy(mRenameBuffer, mSelectedID.c_str());
-                        mRenameMode = true;
+                        mEditedID = mSelectedID;
+                        strcpy(mRenameBuffer, mEditedID.c_str());
                     }
                     if (ImGui::Selectable(std::string("Remove " + mSelectedID).c_str()))
                     {
@@ -135,6 +115,7 @@ namespace nap
                 ImGui::EndPopup();
             }
         }
+
 
     }
 

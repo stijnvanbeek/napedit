@@ -18,17 +18,22 @@ namespace nap
         public:
             Model(Core& core) : mCore(core) { }
 
-            void addResource(const rttr::type& resourceType, const std::string& mID = "");
-            void addGroup(const std::string& groupID) { addResource(RTTI_OF(ResourceGroup), groupID); }
-            void addResourceToGroup(const std::string& groupID, const rttr::type& resourceType, const std::string& mID = "");
-            void addGroupToParent(const std::string& newGroupID, const std::string& parentGroupID);
+            void createResource(const rttr::type& resourceType, const std::string& mID = "");
+            void createGroup(const std::string& groupID) { createResource(RTTI_OF(ResourceGroup), groupID); }
+            void moveResourceToParent(const std::string& mID, const std::string& parentGroupID);
+            void moveGroupToParent(const std::string& groupID, const std::string& parentGroupID);
             void removeResource(const std::string& mID);
             void renameResource(const std::string& mID, const std::string& newName);
-            const std::map<std::string, std::unique_ptr<Resource>>& getResources() const { return mResources; }
+            const std::vector<std::unique_ptr<Resource>>& getResources() const { return mResources; }
+            Resource* findResource(const std::string& mID);
+            const ResourceGroup& getTree() const { return mTree; }
 
         private:
-        	std::map<std::string, std::unique_ptr<Resource>> mResources;
-            std::vector<std::function<void()>> mUndoHistory;
+            ResourceGroup* eraseFromTree(ResourceGroup& branch, Resource& resource);
+            ResourceGroup* eraseGroupFromTree(ResourceGroup& branch, ResourceGroup& group);
+
+        	std::vector<std::unique_ptr<Resource>> mResources;
+            ResourceGroup mTree;
             Core& mCore;
         };
 
