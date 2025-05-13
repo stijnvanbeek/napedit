@@ -1,6 +1,6 @@
 #include "resourcelistgui.h"
 
-#include "imgui_internal.h"
+// #include "imgui_internal.h"
 
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceListGui)
     RTTI_CONSTRUCTOR(nap::Core&)
@@ -21,22 +21,32 @@ namespace nap
 
         bool ResourceListGui::init(utility::ErrorState &errorState)
         {
-            auto resourceType = RTTI_OF(Resource);
-            auto allResources = resourceType.get_derived_classes();
+            auto groupBase = RTTI_OF(ResourceGroup);
+            auto allGroups = groupBase.get_derived_classes();
+            for (auto& group : allGroups)
+                if (mCore.getResourceManager()->getFactory().canCreate(group))
+                    mGroupTypes[group.get_name().to_string()] = &group;
+            // auto groupType = RTTI_OF(ResourceGroup);
+            // mGroupTypes[groupType.get_name().to_string()] = &groupType;
+
+            auto resourceBase = RTTI_OF(Resource);
+            auto allResources = resourceBase.get_derived_classes();
             for (auto& resource : allResources)
                 if (mCore.getResourceManager()->getFactory().canCreate(resource))
-                    mTypes[resource.get_name().to_string()] = &resource;
+                    if (mGroupTypes.find(resource.get_name().to_string()) == mGroupTypes.end())
+                        mResourceTypes[resource.get_name().to_string()] = &resource;
+
             return true;
         }
 
 
-        void ResourceListGui::addResourcePopup()
+        void ResourceListGui::createItemPopup(const std::map<std::string, const rtti::TypeInfo*>& types)
         {
             // Filter the available resource types
             if (ImGui::InputText("Filter", mSearchFilter, sizeof(mSearchFilter)))
             {
                 mFilteredTypes.clear();
-                for (auto& pair : mTypes)
+                for (auto& pair : types)
                     if (utility::contains(pair.first, mSearchFilter))
                         mFilteredTypes[pair.first] = pair.second;
             }
@@ -45,9 +55,9 @@ namespace nap
                 // List with all available resource types filtered
                 auto& showedMap = mFilteredTypes;
                 if (showedMap.empty())
-                    showedMap = mTypes;
+                    showedMap = types;
 
-                if (ImGui::ListBoxHeader("##ResourcesTypesListBox", showedMap.size(), 20))
+                if (ImGui::ListBoxHeader("##TypesListBox", showedMap.size(), 20))
                 {
                     auto resourceTypePair = showedMap.begin();
                     for (int i = 0; i < showedMap.size(); ++i)
@@ -55,7 +65,10 @@ namespace nap
                         if (ImGui::Selectable(resourceTypePair->first.c_str(), i == mSelectedType))
                         {
                             mSelectedType = i;
-                            mModel->createResource(*resourceTypePair->second);
+                            if (resourceTypePair->second->is_derived_from(RTTI_OF(ResourceGroup)))
+                                mModel->createGroup(*resourceTypePair->second);
+                            else
+                                mModel->createResource(*resourceTypePair->second);
                             ImGui::CloseCurrentPopup();
                         }
                         resourceTypePair++;
@@ -70,8 +83,8 @@ namespace nap
         {
             // List of all resources
             ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
-            drawTree(mModel->getTree().mMembers);
             drawTree(mModel->getTree().mChildren);
+            drawTree(mModel->getTree().mMembers);
             ImGui::EndChild();
 
             if (ImGui::IsMouseDoubleClicked(0))
@@ -96,6 +109,10 @@ namespace nap
                 {
                     chosenPopup = "##AddResourcePopup";
                 }
+                if (ImGui::Selectable("Create Group..."))
+                {
+                    chosenPopup = "##AddGroupPopup";
+                }
                 if (!mSelectedID.empty())
                 {
                     if (ImGui::Selectable(std::string("Rename " + mSelectedID).c_str()))
@@ -117,7 +134,13 @@ namespace nap
 
             if (ImGui::BeginPopup("##AddResourcePopup"))
             {
-                addResourcePopup();
+                createItemPopup(mResourceTypes);
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::BeginPopup("##AddGroupPopup"))
+            {
+                createItemPopup(mGroupTypes);
                 ImGui::EndPopup();
             }
         }

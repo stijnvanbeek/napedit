@@ -1,6 +1,7 @@
 #include "model.h"
 
 #include "nap/group.h"
+#include <utility/stringutils.h>
 
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::Model)
     RTTI_CONSTRUCTOR(nap::Core&)
@@ -106,8 +107,10 @@ namespace nap
             auto it = std::find_if(mResources.begin(), mResources.end(), [&mID](const auto& resource) { return resource->mID == mID; });
             if (it != mResources.end())
                 return it->get();
-            else
-                return nullptr;
+            else if (mID == mTree.mID)
+                return &mTree;
+
+            return nullptr;
         }
 
 

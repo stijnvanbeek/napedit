@@ -9,7 +9,7 @@ namespace nap
     namespace edit
     {
     
-        class ResourceListGui : public gui::Gui
+        class NAPAPI ResourceListGui : public gui::Gui
         {
             RTTI_ENABLE(Gui)
             
@@ -21,7 +21,7 @@ namespace nap
             // Inherited
             bool init(utility::ErrorState& errorState) override;
 
-            void addResourcePopup();
+            void createItemPopup(const std::map<std::string, const rtti::TypeInfo*>& types);
             
         private:
             void draw() override;
@@ -29,7 +29,8 @@ namespace nap
             template <typename T>
             void drawTree(const std::vector<ResourcePtr<T>>& branch);
 
-            std::map<std::string, const rtti::TypeInfo*> mTypes;
+            std::map<std::string, const rtti::TypeInfo*> mResourceTypes;
+            std::map<std::string, const rtti::TypeInfo*> mGroupTypes;
             std::map<std::string, const rtti::TypeInfo*> mFilteredTypes;
             int mSelectedType = -1;
             char mSearchFilter[128];
