@@ -51,37 +51,38 @@ namespace nap
             // Members
             for (auto& resource : branch)
             {
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+                if (!resource.get_type().is_derived_from(rtti::TypeInfo::get<ResourceGroup>()))
+                    flags |= ImGuiTreeNodeFlags_Leaf;
+
+                std::string label = "###" + resource->mID;
+                bool opened = ImGui::TreeNodeEx(label.c_str(), flags);
+
+                ImGui::SameLine();
                 if (mEditedID == resource->mID)
                 {
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetTreeNodeToLabelSpacing(), 0));
-                    if (ImGui::InputText("##RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    if (ImGui::InputText("###RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
                         mEnteredID = mRenameBuffer;
                     ImGui::PopStyleVar();
                 }
                 else {
-                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-                    if (mSelectedID == resource->mID)
-                        flags |= ImGuiTreeNodeFlags_Selected;
-                    if (ImGui::TreeNodeEx(resource->mID.c_str(), flags))
+                    if (ImGui::Selectable(resource->mID.c_str()))
                     {
-                        if (ImGui::IsMouseDoubleClicked(0))
-                        {
-                            mEditedID = mSelectedID;
-                            strcpy(mRenameBuffer, mEditedID.c_str());
-                        }
-                        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
-                        {
-                            mSelectedID = resource->mID;
-                            mEditedID.clear();
-                        }
-                        auto group = rtti_cast<ResourceGroup>(resource.get());
-                        if (group != nullptr)
-                        {
-                            drawTree(group->mMembers);
-                            drawTree(group->mChildren);
-                        }
-                        ImGui::TreePop();
+                        mSelectedID = resource->mID;
+                        mEditedID.clear();
                     }
+                }
+
+                if (opened)
+                {
+                    auto group = rtti_cast<ResourceGroup>(resource.get());
+                    if (group != nullptr)
+                    {
+                        drawTree(group->mMembers);
+                        drawTree(group->mChildren);
+                    }
+                    ImGui::TreePop();
                 }
             }
         }

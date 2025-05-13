@@ -74,6 +74,12 @@ namespace nap
             drawTree(mModel->getTree().mChildren);
             ImGui::EndChild();
 
+            if (ImGui::IsMouseDoubleClicked(0))
+            {
+                mEditedID = mSelectedID;
+                strcpy(mRenameBuffer, mEditedID.c_str());
+            }
+
             if (!mEnteredID.empty())
             {
                 mModel->renameResource(mSelectedID, mEnteredID);
