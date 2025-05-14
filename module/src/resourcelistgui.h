@@ -53,7 +53,7 @@ namespace nap
             for (auto& resource : branch)
             {
                 ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
-                if (!resource.get_type().is_derived_from(rtti::TypeInfo::get<ResourceGroup>()))
+                if (!resource->get_type().template is_derived_from<IGroup>())
                     flags |= ImGuiTreeNodeFlags_Leaf;
 
                 std::string label = "###" + resource->mID;
@@ -68,7 +68,7 @@ namespace nap
                     ImGui::PopStyleVar();
                 }
                 else {
-                    if (ImGui::Selectable(resource->mID.c_str()))
+                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID))
                     {
                         mSelectedID = resource->mID;
                         mEditedID.clear();

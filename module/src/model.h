@@ -16,7 +16,13 @@ namespace nap
             RTTI_ENABLE(Resource)
 
         public:
-            Model(Core& core) : mCore(core) { mTree.mID = "Resources"; }
+            struct Tree
+            {
+                std::vector<ResourcePtr<Resource>> mResources;
+                std::vector<ResourcePtr<ResourceGroup>> mGroups;
+            };
+
+            Model(Core& core) : mCore(core) { }
 
             void createResource(const rttr::type& resourceType, const std::string& mID = "");
             void createGroup(const rttr::type& groupType, const std::string& groupID = "");
@@ -26,15 +32,16 @@ namespace nap
             void renameResource(const std::string& mID, const std::string& newName);
             const std::vector<std::unique_ptr<Resource>>& getResources() const { return mResources; }
             Resource* findResource(const std::string& mID);
-            ResourceGroup& getTree() { return mTree; }
+            Tree& getTree() { return mTree; }
 
         private:
-            ResourceGroup* eraseFromTree(ResourceGroup& branch, Resource& resource);
-            ResourceGroup* eraseGroupFromTree(ResourceGroup& branch, ResourceGroup& group);
+            bool eraseFromTree(std::vector<ResourcePtr<Resource>>& branch, Object& resource);
+            bool eraseFromTree(std::vector<ResourcePtr<ResourceGroup>>& branch, Object& resource);
+            bool eraseFromTree(Object& resource);
             std::string getUniqueID(const std::string& baseID);
 
         	std::vector<std::unique_ptr<Resource>> mResources;
-            ResourceGroup mTree;
+            Tree mTree;
             Core& mCore;
         };
 

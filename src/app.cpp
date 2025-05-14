@@ -7,6 +7,8 @@
 #include <inputrouter.h>
 #include <rendergnomoncomponent.h>
 
+#include <nap/group.h>
+
 namespace nap 
 {    
     bool CoreApp::init(utility::ErrorState& error)
@@ -37,6 +39,21 @@ namespace nap
     	mWindow = mResourceManager->findObject<gui::GuiWindow>("MainWindow");
     	if (!error.check(mWindow != nullptr, "unable to find main window gui"))
     		return false;
+
+    	// Test
+    	ResourceGroup resources;
+    	resources.mID = "group";
+    	Resource res1;
+    	res1.mID = "res1";
+    	ResourceGroup subGroup;
+    	subGroup.mID = "subGroup";
+
+    	resources.mMembers.emplace_back(&res1);
+    	resources.mChildren.emplace_back(&subGroup);
+
+		IGroup* igroup = &resources;
+    	auto prop = igroup->getMembersProperty();
+    	auto members = prop.get_value(*igroup).get_value<std::vector<rtti::ObjectPtr<Object>>>();
 
     	// All done!
         return true;

@@ -13,6 +13,14 @@ namespace nap
     namespace edit
     {
 
+
+        template <typename ClassType, typename MemberType>
+            MemberType* getRawMemberPointer(ClassType& instance, MemberType ClassType::*memberPointer)
+        {
+            return &(instance.*memberPointer);
+        }
+
+
         void Model::createResource(const rttr::type& resourceType, const std::string& aID)
         {
             auto object = mCore.getResourceManager()->getFactory().create(resourceType);
@@ -28,7 +36,7 @@ namespace nap
             {
                 resource->mID = mID;
                 mResources.emplace_back(std::unique_ptr<Resource>(resource));
-                mTree.mMembers.emplace_back(resource);
+                mTree.mResources.emplace_back(resource);
             }
         }
 
@@ -37,7 +45,7 @@ namespace nap
         void Model::createGroup(const rttr::type &groupType, const std::string &aID)
         {
             auto object = mCore.getResourceManager()->getFactory().create(groupType);
-            auto group = rtti_cast<ResourceGroup>(object);
+            auto group = rtti_cast<IGroup>(object);
             assert(group != nullptr);
             auto typeName = groupType.get_name().to_string();
             auto mID = typeName;
@@ -47,8 +55,8 @@ namespace nap
             if (!mID.empty())
             {
                 group->mID = mID;
-                mResources.emplace_back(std::unique_ptr<ResourceGroup>(group));
-                mTree.mChildren.emplace_back(group);
+                mResources.emplace_back(std::unique_ptr<Resource>(group));
+                mTree.mGroups.emplace_back(static_cast<ResourceGroup*>(group));
             }
         }
 
@@ -57,13 +65,13 @@ namespace nap
         {
             auto resource = rtti_cast<Resource>(findResource(mID));
             assert(resource != nullptr);
-            auto oldGroup = eraseFromTree(mTree, *resource);
-            assert(oldGroup != nullptr);
+            bool found = eraseFromTree(*resource);
+            assert(found);
             auto group = rtti_cast<ResourceGroup>(findResource(parentGroupID));
             if (group != nullptr)
                 group->mMembers.emplace_back(resource);
             else
-                mTree.mMembers.emplace_back(resource);
+                mTree.mResources.emplace_back(resource);
         }
 
 
@@ -71,13 +79,13 @@ namespace nap
         {
             auto group = rtti_cast<ResourceGroup>(findResource(groupID));
             assert(group != nullptr);
-            auto oldParent = eraseGroupFromTree(mTree, *group);
-            assert(oldParent != nullptr);
+            auto found = eraseFromTree(*group);
+            assert(found);
             auto parent = rtti_cast<ResourceGroup>(findResource(parentGroupID));
             if (parent != nullptr)
                 parent->mChildren.emplace_back(group);
             else
-                mTree.mChildren.emplace_back(group);
+                mTree.mGroups.emplace_back(group);
         }
 
 
@@ -86,8 +94,8 @@ namespace nap
             auto it = std::find_if(mResources.begin(), mResources.end(), [&mID](const auto& resource) { return resource->mID == mID; });
             assert(it != mResources.end());
             auto resource = it->get();
-            auto oldGroup = eraseFromTree(mTree, *resource);
-            assert(oldGroup != nullptr);
+            bool found = eraseFromTree(*resource);
+            assert(found);
             mResources.erase(it);
         }
 
@@ -107,50 +115,58 @@ namespace nap
             auto it = std::find_if(mResources.begin(), mResources.end(), [&mID](const auto& resource) { return resource->mID == mID; });
             if (it != mResources.end())
                 return it->get();
-            else if (mID == mTree.mID)
-                return &mTree;
 
             return nullptr;
         }
 
 
-        ResourceGroup* Model::eraseFromTree(ResourceGroup& branch, Resource &resource)
-        {
-            auto it = std::find(branch.mMembers.begin(), branch.mMembers.end(), &resource);
-            if (it != branch.mMembers.end())
+        bool Model::eraseFromTree(std::vector<ResourcePtr<Resource>>& branch, Object &object)
+        {;
+            auto it = std::find(branch.begin(), branch.end(), &object);
+            if (it != branch.end())
             {
-                branch.mMembers.erase(it);
-                return &branch;
+                branch.erase(it);
+                return true;
             }
 
-            for (auto& group : branch.mChildren)
+            for (auto& element : branch)
             {
-                auto parent = eraseFromTree(*group, resource);
-                if (parent != nullptr)
-                    return parent;
+                auto group = rtti_cast<ResourceGroup>(element.get());
+                if (group != nullptr)
+                {
+                    if (eraseFromTree(group->mMembers, object))
+                        return true;
+                    if (eraseFromTree(group->mChildren, object))
+                        return true;
+                }
             }
 
-            return nullptr;
+            return false;
         }
 
 
-        ResourceGroup* Model::eraseGroupFromTree(ResourceGroup &branch, ResourceGroup &group)
+        bool Model::eraseFromTree(std::vector<ResourcePtr<ResourceGroup>> &branch, Object &resource)
         {
-            auto it = std::find(branch.mChildren.begin(), branch.mChildren.end(), &group);
-            if (it != branch.mChildren.end())
+            auto it = std::find(branch.begin(), branch.end(), rtti_cast<Resource>(&resource));
+            if (it != branch.end())
             {
-                branch.mChildren.erase(it);
-                return &branch;
+                branch.erase(it);
+                return true;
             }
-
-            for (auto& child : branch.mChildren)
+            for (auto& element : branch)
             {
-                auto parent = eraseGroupFromTree(*child, group);
-                if (parent != nullptr)
-                    return parent;
+                if (eraseFromTree(element->mMembers, resource))
+                    return true;
+                if (eraseFromTree(element->mChildren, resource))
+                    return true;
             }
+            return false;
+        }
 
-            return nullptr;
+
+        bool Model::eraseFromTree(Object &resource)
+        {
+            return eraseFromTree(mTree.mResources, resource) || eraseFromTree(mTree.mGroups, resource);
         }
 
 

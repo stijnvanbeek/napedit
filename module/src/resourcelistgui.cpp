@@ -1,5 +1,7 @@
 #include "resourcelistgui.h"
 
+#include "nap/logger.h"
+
 // #include "imgui_internal.h"
 
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceListGui)
@@ -21,7 +23,7 @@ namespace nap
 
         bool ResourceListGui::init(utility::ErrorState &errorState)
         {
-            auto groupBase = RTTI_OF(ResourceGroup);
+            auto groupBase = RTTI_OF(IGroup);
             auto allGroups = groupBase.get_derived_classes();
             for (auto& group : allGroups)
                 if (mCore.getResourceManager()->getFactory().canCreate(group))
@@ -65,7 +67,7 @@ namespace nap
                         if (ImGui::Selectable(resourceTypePair->first.c_str(), i == mSelectedType))
                         {
                             mSelectedType = i;
-                            if (resourceTypePair->second->is_derived_from(RTTI_OF(ResourceGroup)))
+                            if (resourceTypePair->second->is_derived_from(RTTI_OF(IGroup)))
                                 mModel->createGroup(*resourceTypePair->second);
                             else
                                 mModel->createResource(*resourceTypePair->second);
@@ -83,8 +85,8 @@ namespace nap
         {
             // List of all resources
             ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
-            drawTree(mModel->getTree().mChildren);
-            drawTree(mModel->getTree().mMembers);
+            drawTree(mModel->getTree().mGroups);
+            drawTree(mModel->getTree().mResources);
             ImGui::EndChild();
 
             if (ImGui::IsMouseDoubleClicked(0))
@@ -130,7 +132,10 @@ namespace nap
             }
 
             if (!chosenPopup.empty())
+            {
+                mFilteredTypes.clear();
                 ImGui::OpenPopup(chosenPopup.c_str());
+            }
 
             if (ImGui::BeginPopup("##AddResourcePopup"))
             {
