@@ -46,33 +46,39 @@ namespace nap
 
         std::string Model::createGroup(const rttr::type &groupType, const std::string &aID)
         {
+            // Create the group
             auto object = mCore.getResourceManager()->getFactory().create(groupType);
             auto group = rtti_cast<IGroup>(object);
             assert(group != nullptr);
+
+            // Generate the ID
             auto typeName = groupType.get_name().to_string();
             auto mID = typeName;
             if (!aID.empty())
                 mID = aID;
             mID = getUniqueID(mID);
+
             if (!mID.empty())
             {
+                // Add to mResources and to mTree
                 group->mID = mID;
                 auto groupPtr = std::unique_ptr<Resource>(group);
                 mResources.emplace_back(std::move(groupPtr));
                 mTree.mGroups.emplace_back(static_cast<ResourceGroup*>(group));
                 return mID;
             }
+
             return "";
         }
 
 
         void Model::moveResourceToParent(const std::string &mID, const std::string &parentGroupID)
         {
-            auto resource = rtti_cast<Resource>(findResource(mID));
+            auto resource = findResource(mID);
             assert(resource != nullptr);
             bool found = eraseFromTree(*resource);
             assert(found);
-            auto group = static_cast<ResourceGroup*>(findResource(parentGroupID));
+            auto group = findGroup(parentGroupID);
             if (group != nullptr)
                 group->mMembers.emplace_back(resource);
             else
@@ -82,13 +88,15 @@ namespace nap
 
         void Model::moveGroupToParent(const std::string &groupID, const std::string &parentGroupID)
         {
-            auto group = rtti_cast<ResourceGroup>(findResource(groupID));
+            auto group = findGroup(groupID);
             assert(group != nullptr);
             auto found = eraseFromTree(*group);
             assert(found);
-            auto parent = rtti_cast<ResourceGroup>(findResource(parentGroupID));
+            auto parent = findGroup(parentGroupID);
             if (parent != nullptr)
+            {
                 parent->mChildren.emplace_back(group);
+            }
             else
                 mTree.mGroups.emplace_back(group);
         }
@@ -125,12 +133,15 @@ namespace nap
         }
 
 
-        ResourceGroup* Model::findParent(const std::string &mID)
+        ResourceGroup* Model::findGroup(const std::string &mID)
         {
-            auto it = std::find_if(mTree.mGroups.begin(), mTree.mGroups.end(), [&](auto& group){ return group->mID == mID; });
-            if (it != mTree.mGroups.end())
+            auto resource = findResource(mID);
+            if (resource == nullptr)
                 return nullptr;
-            return (*it).get();
+            auto group = rtti_cast<IGroup>(resource);
+            if (group != nullptr)
+                return static_cast<ResourceGroup*>(group);
+            return nullptr;
         }
 
 

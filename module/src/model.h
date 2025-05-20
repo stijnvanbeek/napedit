@@ -32,7 +32,7 @@ namespace nap
             void renameResource(const std::string& mID, const std::string& newName);
             const std::vector<std::unique_ptr<Resource>>& getResources() const { return mResources; }
             Resource* findResource(const std::string& mID);
-            ResourceGroup* findParent(const std::string& mID);
+            ResourceGroup* findGroup(const std::string& mID);
             Tree& getTree() { return mTree; }
 
         private:

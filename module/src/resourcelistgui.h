@@ -65,7 +65,7 @@ namespace nap
                     ImGui::PopStyleVar();
                 }
                 else {
-                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID))
+                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID, ImGuiSelectableFlags_SpanAllColumns))
                     {
                         mSelectedID = resource->mID;
                         mEditedID.clear();
@@ -74,9 +74,9 @@ namespace nap
 
                 if (opened)
                 {
-                    auto group = rtti_cast<ResourceGroup>(resource.get());
-                    if (group != nullptr)
+                    if (rtti_cast<IGroup>(resource.get()) != nullptr)
                     {
+                        auto group = static_cast<ResourceGroup*>(resource.get());
                         drawTree(group->mMembers);
                         drawTree(group->mChildren);
                     }

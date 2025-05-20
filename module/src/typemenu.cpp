@@ -8,6 +8,7 @@ namespace nap
 
         void TypeMenu::init(const std::map<std::string, const rtti::TypeInfo *> &types, rtti::TypeInfo *derivedFrom)
         {
+            mTypes.clear();
             if (derivedFrom == nullptr)
                 mTypes = types;
             else {

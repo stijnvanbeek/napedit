@@ -28,8 +28,6 @@ namespace nap
             for (auto& group : allGroups)
                 if (mCore.getResourceManager()->getFactory().canCreate(group))
                     mGroupTypes[group.get_name().to_string()] = &group;
-            // auto groupType = RTTI_OF(ResourceGroup);
-            // mGroupTypes[groupType.get_name().to_string()] = &groupType;
 
             auto resourceBase = RTTI_OF(Resource);
             auto allResources = resourceBase.get_derived_classes();
@@ -40,7 +38,6 @@ namespace nap
 
             return true;
         }
-
 
 
         void ResourceListGui::draw()
@@ -77,20 +74,22 @@ namespace nap
                 if (selectedGroup != nullptr)
                 {
                     auto type = selectedGroup->getMemberType();
-                    if (ImGui::Selectable(utility::stringFormat("Create %s...", type.get_name().to_string().c_str()).c_str()))
+                    // Create member
+                    if (ImGui::Selectable("Create member..."))
                     {
                         mTypeMenu.init(mResourceTypes, &type);
                         chosenPopup = "##AddResourcePopup";
                     }
-                    if (ImGui::Selectable(utility::stringFormat("Create %s...", selectedGroup->get_type().get_name().to_string().c_str()).c_str()))
+                    // Create child
+                    if (ImGui::Selectable("Create child..."))
                     {
-                        auto mID = mModel->createGroup(type);
+                        auto mID = mModel->createGroup(selectedGroup->get_type());
                         mModel->moveGroupToParent(mID, mSelectedID);
                         mSelectedID.clear();
                     }
                 }
 
-                // No selected group
+                // No group selected
                 else {
                     if (ImGui::Selectable("Create Resource..."))
                     {
@@ -108,21 +107,23 @@ namespace nap
                         }
                         else {
                             mTypeMenu.init(mGroupTypes);
-                            chosenPopup = "##AddResourcePopup";
+                            chosenPopup = "##AddGroupPopup";
                         }
                     }
-                    if (!mSelectedID.empty())
+                }
+
+                // For selections
+                if (!mSelectedID.empty())
+                {
+                    if (ImGui::Selectable(std::string("Rename " + mSelectedID).c_str()))
                     {
-                        if (ImGui::Selectable(std::string("Rename " + mSelectedID).c_str()))
-                        {
-                            mEditedID = mSelectedID;
-                            strcpy(mRenameBuffer, mEditedID.c_str());
-                        }
-                        if (ImGui::Selectable(std::string("Remove " + mSelectedID).c_str()))
-                        {
-                            mModel->removeResource(mSelectedID);
-                            mSelectedID.clear();
-                        }
+                        mEditedID = mSelectedID;
+                        strcpy(mRenameBuffer, mEditedID.c_str());
+                    }
+                    if (ImGui::Selectable(std::string("Remove " + mSelectedID).c_str()))
+                    {
+                        mModel->removeResource(mSelectedID);
+                        mSelectedID.clear();
                     }
                 }
 
@@ -139,6 +140,17 @@ namespace nap
                     auto mID = mModel->createResource(*mTypeMenu.getSelectedType(), mTypeMenu.getSelectedTypeID());
                     if (!mSelectedID.empty())
                         mModel->moveResourceToParent(mID, mSelectedID);
+                    mSelectedID.clear();
+                }
+                ImGui::EndPopup();
+            }
+            if (ImGui::BeginPopup("##AddGroupPopup"))
+            {
+                if (mTypeMenu.show())
+                {
+                    auto mID = mModel->createGroup(*mTypeMenu.getSelectedType(), mTypeMenu.getSelectedTypeID());
+                    if (!mSelectedID.empty())
+                        mModel->moveGroupToParent(mID, mSelectedID);
                     mSelectedID.clear();
                 }
                 ImGui::EndPopup();
