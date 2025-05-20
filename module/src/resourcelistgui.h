@@ -17,7 +17,7 @@ namespace nap
         public:
             ResourceListGui(Core& core);
 
-            ResourcePtr<edit::Model> mModel; ///< Property: 'Model'
+            ResourcePtr<Model> mModel; ///< Property: 'Model'
 
             // Inherited
             bool init(utility::ErrorState& errorState) override;
@@ -31,8 +31,6 @@ namespace nap
             std::map<std::string, const rtti::TypeInfo*> mResourceTypes;
             std::map<std::string, const rtti::TypeInfo*> mGroupTypes;
             char mRenameBuffer[128];
-
-            std::set<std::string> mExpandedIDs;
 
             std::string mSelectedID;
             std::string mEditedID;
@@ -49,7 +47,7 @@ namespace nap
             // Members
             for (auto& resource : branch)
             {
-                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
                 if (!resource->get_type().template is_derived_from<IGroup>())
                     flags |= ImGuiTreeNodeFlags_Leaf;
 
@@ -60,6 +58,7 @@ namespace nap
                 if (mEditedID == resource->mID)
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    ImGui::SetNextItemWidth((ImGui::GetWindowWidth() / 2) - ImGui::GetCursorPosX() - 10);
                     if (ImGui::InputText("###RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
                         mEnteredID = mRenameBuffer;
                     ImGui::PopStyleVar();
@@ -71,6 +70,11 @@ namespace nap
                         mEditedID.clear();
                     }
                 }
+
+                auto type = resource->get_type();
+                ImGui::SameLine();
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2);
+                ImGui::Text(type.get_name().to_string().c_str());
 
                 if (opened)
                 {
