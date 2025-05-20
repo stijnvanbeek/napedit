@@ -8,6 +8,9 @@
 #include <rendergnomoncomponent.h>
 
 #include <nap/group.h>
+#include <parametergroup.h>
+
+#include <parameternumeric.h>
 
 namespace nap 
 {    
@@ -41,11 +44,11 @@ namespace nap
     		return false;
 
     	// Test
-    	ResourceGroup resources;
+    	ParameterGroup resources;
     	resources.mID = "group";
-    	Resource res1;
+    	ParameterFloat res1;
     	res1.mID = "res1";
-    	ResourceGroup subGroup;
+    	ParameterGroup subGroup;
     	subGroup.mID = "subGroup";
 
     	resources.mMembers.emplace_back(&res1);
@@ -54,6 +57,9 @@ namespace nap
 		IGroup* igroup = &resources;
     	auto prop = igroup->getMembersProperty();
     	auto members = prop.get_value(*igroup).get_value<std::vector<rtti::ObjectPtr<Object>>>();
+
+    	ResourceGroup* groupPtr = static_cast<ResourceGroup*>(static_cast<IGroup*>(&resources));
+    	auto type = groupPtr->getMemberType();
 
     	// All done!
         return true;

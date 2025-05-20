@@ -42,44 +42,6 @@ namespace nap
         }
 
 
-        void ResourceListGui::createItemPopup(const std::map<std::string, const rtti::TypeInfo*>& types)
-        {
-            // Filter the available resource types
-            if (ImGui::InputText("Filter", mSearchFilter, sizeof(mSearchFilter)))
-            {
-                mFilteredTypes.clear();
-                for (auto& pair : types)
-                    if (utility::contains(pair.first, mSearchFilter))
-                        mFilteredTypes[pair.first] = pair.second;
-            }
-
-            {
-                // List with all available resource types filtered
-                auto& showedMap = mFilteredTypes;
-                if (showedMap.empty())
-                    showedMap = types;
-
-                if (ImGui::ListBoxHeader("##TypesListBox", showedMap.size(), 20))
-                {
-                    auto resourceTypePair = showedMap.begin();
-                    for (int i = 0; i < showedMap.size(); ++i)
-                    {
-                        if (ImGui::Selectable(resourceTypePair->first.c_str(), i == mSelectedType))
-                        {
-                            mSelectedType = i;
-                            if (resourceTypePair->second->is_derived_from(RTTI_OF(IGroup)))
-                                mModel->createGroup(*resourceTypePair->second);
-                            else
-                                mModel->createResource(*resourceTypePair->second);
-                            ImGui::CloseCurrentPopup();
-                        }
-                        resourceTypePair++;
-                    }
-                    ImGui::ListBoxFooter();
-                }
-            }
-        }
-
 
         void ResourceListGui::draw()
         {
@@ -107,45 +69,78 @@ namespace nap
             std::string chosenPopup;
             if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
             {
-                if (ImGui::Selectable("Create Resource..."))
-                {
-                    chosenPopup = "##AddResourcePopup";
-                }
-                if (ImGui::Selectable("Create Group..."))
-                {
-                    chosenPopup = "##AddGroupPopup";
-                }
+                IGroup* selectedGroup = nullptr;
                 if (!mSelectedID.empty())
+                    selectedGroup = rtti_cast<IGroup>(mModel->findResource(mSelectedID));
+
+                // For groups
+                if (selectedGroup != nullptr)
                 {
-                    if (ImGui::Selectable(std::string("Rename " + mSelectedID).c_str()))
+                    auto type = selectedGroup->getMemberType();
+                    if (ImGui::Selectable(utility::stringFormat("Create %s...", type.get_name().to_string().c_str()).c_str()))
                     {
-                        mEditedID = mSelectedID;
-                        strcpy(mRenameBuffer, mEditedID.c_str());
+                        mTypeMenu.init(mResourceTypes, &type);
+                        chosenPopup = "##AddResourcePopup";
                     }
-                    if (ImGui::Selectable(std::string("Remove " + mSelectedID).c_str()))
+                    if (ImGui::Selectable(utility::stringFormat("Create %s...", selectedGroup->get_type().get_name().to_string().c_str()).c_str()))
                     {
-                        mModel->removeResource(mSelectedID);
+                        auto mID = mModel->createGroup(type);
+                        mModel->moveGroupToParent(mID, mSelectedID);
                         mSelectedID.clear();
                     }
                 }
+
+                // No selected group
+                else {
+                    if (ImGui::Selectable("Create Resource..."))
+                    {
+                        mTypeMenu.init(mResourceTypes);
+                        chosenPopup = "##AddResourcePopup";
+                    }
+                    if (ImGui::Selectable("Create Group..."))
+                    {
+                        auto selectedGroup = rtti_cast<ResourceGroup>(mModel->findResource(mSelectedID));
+                        if (selectedGroup != nullptr)
+                        {
+                            auto type = selectedGroup->get_type();
+                            mModel->createGroup(type);
+                            mSelectedID.clear();
+                        }
+                        else {
+                            mTypeMenu.init(mGroupTypes);
+                            chosenPopup = "##AddResourcePopup";
+                        }
+                    }
+                    if (!mSelectedID.empty())
+                    {
+                        if (ImGui::Selectable(std::string("Rename " + mSelectedID).c_str()))
+                        {
+                            mEditedID = mSelectedID;
+                            strcpy(mRenameBuffer, mEditedID.c_str());
+                        }
+                        if (ImGui::Selectable(std::string("Remove " + mSelectedID).c_str()))
+                        {
+                            mModel->removeResource(mSelectedID);
+                            mSelectedID.clear();
+                        }
+                    }
+                }
+
                 ImGui::EndPopup();
             }
 
             if (!chosenPopup.empty())
-            {
-                mFilteredTypes.clear();
                 ImGui::OpenPopup(chosenPopup.c_str());
-            }
 
             if (ImGui::BeginPopup("##AddResourcePopup"))
             {
-                createItemPopup(mResourceTypes);
-                ImGui::EndPopup();
-            }
-
-            if (ImGui::BeginPopup("##AddGroupPopup"))
-            {
-                createItemPopup(mGroupTypes);
+                if (mTypeMenu.show())
+                {
+                    auto mID = mModel->createResource(*mTypeMenu.getSelectedType(), mTypeMenu.getSelectedTypeID());
+                    if (!mSelectedID.empty())
+                        mModel->moveResourceToParent(mID, mSelectedID);
+                    mSelectedID.clear();
+                }
                 ImGui::EndPopup();
             }
         }

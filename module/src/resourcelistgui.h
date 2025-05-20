@@ -1,5 +1,6 @@
 #pragma once
 
+#include <typemenu.h>
 #include <Gui/Gui.h>
 #include <model.h>
 #include <nap/core.h>
@@ -21,8 +22,6 @@ namespace nap
             // Inherited
             bool init(utility::ErrorState& errorState) override;
 
-            void createItemPopup(const std::map<std::string, const rtti::TypeInfo*>& types);
-            
         private:
             void draw() override;
 
@@ -31,9 +30,6 @@ namespace nap
 
             std::map<std::string, const rtti::TypeInfo*> mResourceTypes;
             std::map<std::string, const rtti::TypeInfo*> mGroupTypes;
-            std::map<std::string, const rtti::TypeInfo*> mFilteredTypes;
-            int mSelectedType = -1;
-            char mSearchFilter[128];
             char mRenameBuffer[128];
 
             std::set<std::string> mExpandedIDs;
@@ -42,6 +38,7 @@ namespace nap
             std::string mEditedID;
             std::string mEnteredID;
 
+            TypeMenu mTypeMenu;
             Core& mCore;
         };
 

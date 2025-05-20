@@ -24,20 +24,25 @@ namespace nap
 
             Model(Core& core) : mCore(core) { }
 
-            void createResource(const rttr::type& resourceType, const std::string& mID = "");
-            void createGroup(const rttr::type& groupType, const std::string& groupID = "");
+            std::string createResource(const rttr::type& resourceType, const std::string& mID = "");
+            std::string createGroup(const rttr::type& groupType, const std::string& groupID = "");
             void moveResourceToParent(const std::string& mID, const std::string& parentGroupID);
             void moveGroupToParent(const std::string& groupID, const std::string& parentGroupID);
             void removeResource(const std::string& mID);
             void renameResource(const std::string& mID, const std::string& newName);
             const std::vector<std::unique_ptr<Resource>>& getResources() const { return mResources; }
             Resource* findResource(const std::string& mID);
+            ResourceGroup* findParent(const std::string& mID);
             Tree& getTree() { return mTree; }
 
         private:
             bool eraseFromTree(std::vector<ResourcePtr<Resource>>& branch, Object& resource);
             bool eraseFromTree(std::vector<ResourcePtr<ResourceGroup>>& branch, Object& resource);
             bool eraseFromTree(Object& resource);
+
+            bool findInTree(const std::string& mID, std::vector<ResourcePtr<Resource>>& branch);
+            bool findParentInTree(const std::string& mID, std::vector<ResourcePtr<ResourceGroup>>& branch);
+
             std::string getUniqueID(const std::string& baseID);
 
         	std::vector<std::unique_ptr<Resource>> mResources;

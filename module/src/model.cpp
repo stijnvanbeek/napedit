@@ -21,10 +21,10 @@ namespace nap
         }
 
 
-        void Model::createResource(const rttr::type& resourceType, const std::string& aID)
+        std::string Model::createResource(const rttr::type& resourceType, const std::string& aID)
         {
             auto object = mCore.getResourceManager()->getFactory().create(resourceType);
-            auto resource = rtti_cast<Resource>(object);
+            auto resource = std::unique_ptr<Resource>(rtti_cast<Resource>(object));
             assert(resource != nullptr);
             auto typeName = resourceType.get_name().to_string();
             auto mID = typeName;
@@ -35,14 +35,16 @@ namespace nap
             if (!mID.empty())
             {
                 resource->mID = mID;
-                mResources.emplace_back(std::unique_ptr<Resource>(resource));
-                mTree.mResources.emplace_back(resource);
+                mResources.emplace_back(std::move(resource));
+                mTree.mResources.emplace_back(mResources.back().get());
+                return mResources.back()->mID;
             }
+            return "";
         }
 
 
 
-        void Model::createGroup(const rttr::type &groupType, const std::string &aID)
+        std::string Model::createGroup(const rttr::type &groupType, const std::string &aID)
         {
             auto object = mCore.getResourceManager()->getFactory().create(groupType);
             auto group = rtti_cast<IGroup>(object);
@@ -55,9 +57,12 @@ namespace nap
             if (!mID.empty())
             {
                 group->mID = mID;
-                mResources.emplace_back(std::unique_ptr<Resource>(group));
+                auto groupPtr = std::unique_ptr<Resource>(group);
+                mResources.emplace_back(std::move(groupPtr));
                 mTree.mGroups.emplace_back(static_cast<ResourceGroup*>(group));
+                return mID;
             }
+            return "";
         }
 
 
@@ -67,7 +72,7 @@ namespace nap
             assert(resource != nullptr);
             bool found = eraseFromTree(*resource);
             assert(found);
-            auto group = rtti_cast<ResourceGroup>(findResource(parentGroupID));
+            auto group = static_cast<ResourceGroup*>(findResource(parentGroupID));
             if (group != nullptr)
                 group->mMembers.emplace_back(resource);
             else
@@ -120,6 +125,15 @@ namespace nap
         }
 
 
+        ResourceGroup* Model::findParent(const std::string &mID)
+        {
+            auto it = std::find_if(mTree.mGroups.begin(), mTree.mGroups.end(), [&](auto& group){ return group->mID == mID; });
+            if (it != mTree.mGroups.end())
+                return nullptr;
+            return (*it).get();
+        }
+
+
         bool Model::eraseFromTree(std::vector<ResourcePtr<Resource>>& branch, Object &object)
         {;
             auto it = std::find(branch.begin(), branch.end(), &object);
@@ -167,6 +181,21 @@ namespace nap
         bool Model::eraseFromTree(Object &resource)
         {
             return eraseFromTree(mTree.mResources, resource) || eraseFromTree(mTree.mGroups, resource);
+        }
+
+
+        bool Model::findInTree(const std::string &mID, std::vector<ResourcePtr<Resource>> &branch)
+        {
+            auto it = std::find_if(branch.begin(), branch.end(), [&mID](const auto& resource) { return resource->mID == mID; });
+            if (it != branch.end())
+                return true;
+            return false;
+        }
+
+        
+        bool Model::findParentInTree(const std::string &mID, std::vector<ResourcePtr<ResourceGroup>> &branch)
+        {
+
         }
 
 
