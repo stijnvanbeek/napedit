@@ -32,7 +32,7 @@ namespace nap
             {
                 mFilteredTypes.clear();
                 for (auto& pair : mTypes)
-                    if (utility::contains(pair.first, mSearchFilter))
+                    if (utility::contains(pair.first, mSearchFilter, false))
                         mFilteredTypes[pair.first] = pair.second;
             }
 

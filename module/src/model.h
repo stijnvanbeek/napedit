@@ -26,7 +26,7 @@ namespace nap
 
             std::string createResource(const rttr::type& resourceType, const std::string& mID = "");
             std::string createGroup(const rttr::type& groupType, const std::string& groupID = "");
-            void moveResourceToParent(const std::string& mID, const std::string& parentGroupID);
+            void moveResourceToGroup(const std::string& mID, const std::string& groupID);
             void moveGroupToParent(const std::string& groupID, const std::string& parentGroupID);
             void removeResource(const std::string& mID);
             void renameResource(const std::string& mID, const std::string& newName);
@@ -41,7 +41,6 @@ namespace nap
             bool eraseFromTree(Object& resource);
 
             bool findInTree(const std::string& mID, std::vector<ResourcePtr<Resource>>& branch);
-            bool findParentInTree(const std::string& mID, std::vector<ResourcePtr<ResourceGroup>>& branch);
 
             std::string getUniqueID(const std::string& baseID);
 

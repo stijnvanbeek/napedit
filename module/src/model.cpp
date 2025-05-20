@@ -72,13 +72,13 @@ namespace nap
         }
 
 
-        void Model::moveResourceToParent(const std::string &mID, const std::string &parentGroupID)
+        void Model::moveResourceToGroup(const std::string &mID, const std::string &groupID)
         {
             auto resource = findResource(mID);
             assert(resource != nullptr);
             bool found = eraseFromTree(*resource);
             assert(found);
-            auto group = findGroup(parentGroupID);
+            auto group = findGroup(groupID);
             if (group != nullptr)
                 group->mMembers.emplace_back(resource);
             else
@@ -204,12 +204,6 @@ namespace nap
         }
 
         
-        bool Model::findParentInTree(const std::string &mID, std::vector<ResourcePtr<ResourceGroup>> &branch)
-        {
-
-        }
-
-
         std::string Model::getUniqueID(const std::string &aBaseID)
         {
             auto baseID = aBaseID;

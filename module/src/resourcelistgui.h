@@ -5,6 +5,8 @@
 #include <model.h>
 #include <nap/core.h>
 
+#include "imgui_internal.h"
+
 namespace nap
 {
     namespace edit
@@ -22,6 +24,8 @@ namespace nap
             // Inherited
             bool init(utility::ErrorState& errorState) override;
 
+            const std::string& getSelectedID() const { return mSelectedID; }
+
         private:
             void draw() override;
 
@@ -35,6 +39,8 @@ namespace nap
             std::string mSelectedID;
             std::string mEditedID;
             std::string mEnteredID;
+
+            float mTypeColumnOffset = 0;
 
             TypeMenu mTypeMenu;
             Core& mCore;
@@ -64,7 +70,7 @@ namespace nap
                     ImGui::PopStyleVar();
                 }
                 else {
-                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID, ImGuiSelectableFlags_SpanAllColumns))
+                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID, ImGuiSelectableFlags_SpanAvailWidth))
                     {
                         mSelectedID = resource->mID;
                         mEditedID.clear();
@@ -73,7 +79,7 @@ namespace nap
 
                 auto type = resource->get_type();
                 ImGui::SameLine();
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2);
+                ImGui::SetCursorPosX(mTypeColumnOffset);
                 ImGui::Text(type.get_name().to_string().c_str());
 
                 if (opened)

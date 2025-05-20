@@ -43,7 +43,15 @@ namespace nap
         void ResourceListGui::draw()
         {
             // List of all resources
-            ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false);
+
+            ImGui::Columns(2, "##ResourcesListColumns", true);
+            ImGui::Text("Name");
+            ImGui::NextColumn();
+            mTypeColumnOffset = ImGui::GetCursorPosX();
+            ImGui::Text("Type");
+            ImGui::Columns(1);
+
             drawTree(mModel->getTree().mGroups);
             drawTree(mModel->getTree().mResources);
             ImGui::EndChild();
@@ -139,7 +147,7 @@ namespace nap
                 {
                     auto mID = mModel->createResource(*mTypeMenu.getSelectedType(), mTypeMenu.getSelectedTypeID());
                     if (!mSelectedID.empty())
-                        mModel->moveResourceToParent(mID, mSelectedID);
+                        mModel->moveResourceToGroup(mID, mSelectedID);
                     mSelectedID.clear();
                 }
                 ImGui::EndPopup();

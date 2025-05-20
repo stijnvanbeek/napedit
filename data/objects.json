@@ -88,10 +88,17 @@
                             "Content": [
                                 {
                                     "Type": "nap::gui::GuiLink",
-                                    "mID": "GuiLink",
+                                    "mID": "ResourceListGuiLink",
                                     "Title": "",
                                     "Style": "",
                                     "Link": "ResourceListGui"
+                                },
+                                {
+                                    "Type": "nap::gui::GuiLink",
+                                    "mID": "InspectorLink",
+                                    "Title": "",
+                                    "Style": "",
+                                    "Link": "Inspector"
                                 }
                             ]
                         }
@@ -103,6 +110,14 @@
                     "Title": "",
                     "Style": "",
                     "Model": "Model"
+                },
+                {
+                    "Type": "nap::edit::Inspector",
+                    "mID": "Inspector",
+                    "Title": "",
+                    "Style": "",
+                    "Model": "Model",
+                    "ResourceListGui": "ResourceListGui"
                 }
             ],
             "Children": []
