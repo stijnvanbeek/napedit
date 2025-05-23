@@ -1,12 +1,12 @@
-#include "resourcelistgui.h"
+#include "resourcelist.h"
 
 #include "nap/logger.h"
 
 // #include "imgui_internal.h"
 
-RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceListGui)
+RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceList)
     RTTI_CONSTRUCTOR(nap::Core&)
-    RTTI_PROPERTY("Model", &nap::edit::ResourceListGui::mModel, nap::rtti::EPropertyMetaData::Required)
+    RTTI_PROPERTY("Model", &nap::edit::ResourceList::mModel, nap::rtti::EPropertyMetaData::Required)
 RTTI_END_CLASS
 
 namespace nap
@@ -15,13 +15,13 @@ namespace nap
     namespace edit
     {
 
-        ResourceListGui::ResourceListGui(Core &core): mCore(core)
+        ResourceList::ResourceList(Core &core): mCore(core)
         {
             memset(mRenameBuffer, 0, sizeof(mRenameBuffer));
         }
 
 
-        bool ResourceListGui::init(utility::ErrorState &errorState)
+        bool ResourceList::init(utility::ErrorState &errorState)
         {
             auto groupBase = RTTI_OF(IGroup);
             auto allGroups = groupBase.get_derived_classes();
@@ -40,17 +40,17 @@ namespace nap
         }
 
 
-        void ResourceListGui::draw()
+        void ResourceList::draw()
         {
             // List of all resources
             ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false);
 
-            ImGui::Columns(2, "##ResourcesListColumns", true);
+            ImGui::BeginColumns("##ResourcesListColumns", 2);
             ImGui::Text("Name");
             ImGui::NextColumn();
             mTypeColumnOffset = ImGui::GetCursorPosX();
             ImGui::Text("Type");
-            ImGui::Columns(1);
+            ImGui::EndColumns();
 
             drawTree(mModel->getTree().mGroups);
             drawTree(mModel->getTree().mResources);

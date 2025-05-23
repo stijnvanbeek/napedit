@@ -43,13 +43,13 @@
                     },
                     "Flags": {
                         "NoTitleBar": true,
-                        "NoResize": false,
-                        "NoMove": false,
-                        "NoScrollBar": false,
-                        "NoScrollWithMouse": false,
-                        "NoCollapse": false,
+                        "NoResize": true,
+                        "NoMove": true,
+                        "NoScrollBar": true,
+                        "NoScrollWithMouse": true,
+                        "NoCollapse": true,
                         "AlwaysAutoResize": true,
-                        "NoSavedSettings": true,
+                        "NoSavedSettings": false,
                         "MenuBar": false,
                         "HorizontalScrollBar": false,
                         "CanClose": true
@@ -72,7 +72,7 @@
                             "y": 0.0
                         },
                         "Flags": {
-                            "NoScrollBar": false,
+                            "NoScrollBar": true,
                             "NoScrollWithMouse": false,
                             "HorizontalScrollBar": false
                         },
@@ -88,10 +88,10 @@
                             "Content": [
                                 {
                                     "Type": "nap::gui::GuiLink",
-                                    "mID": "ResourceListGuiLink",
+                                    "mID": "ResourceListLink",
                                     "Title": "",
                                     "Style": "",
-                                    "Link": "ResourceListGui"
+                                    "Link": "ResourceList"
                                 },
                                 {
                                     "Type": "nap::gui::GuiLink",
@@ -105,8 +105,8 @@
                     }
                 },
                 {
-                    "Type": "nap::edit::ResourceListGui",
-                    "mID": "ResourceListGui",
+                    "Type": "nap::edit::ResourceList",
+                    "mID": "ResourceList",
                     "Title": "",
                     "Style": "",
                     "Model": "Model"
@@ -117,7 +117,7 @@
                     "Title": "",
                     "Style": "",
                     "Model": "Model",
-                    "ResourceListGui": "ResourceListGui"
+                    "ResourceListGui": "ResourceList"
                 }
             ],
             "Children": []

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <resourcelistgui.h>
+#include <resourcelist.h>
 
 namespace nap
 {
@@ -15,10 +15,13 @@ namespace nap
             Inspector() = default;
 
             ResourcePtr<Model> mModel; ///< Property: 'Model'
-            ResourcePtr<ResourceListGui> mResourceListGui; ///< Property: 'ResourceListGui'
+            ResourcePtr<ResourceList> mResourceListGui; ///< Property: 'ResourceListGui'
             
         private:
             void draw() override;
+
+            float mValueColumnOffset = 0.f;
+            float mTypeColumnOffset = 0.f;
         };
     
     }

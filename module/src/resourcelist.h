@@ -12,12 +12,12 @@ namespace nap
     namespace edit
     {
     
-        class NAPAPI ResourceListGui : public gui::Gui
+        class NAPAPI ResourceList : public gui::Gui
         {
             RTTI_ENABLE(Gui)
             
         public:
-            ResourceListGui(Core& core);
+            ResourceList(Core& core);
 
             ResourcePtr<Model> mModel; ///< Property: 'Model'
 
@@ -48,7 +48,7 @@ namespace nap
 
 
         template <typename T>
-        void ResourceListGui::drawTree(const std::vector<ResourcePtr<T>>& branch)
+        void ResourceList::drawTree(const std::vector<ResourcePtr<T>>& branch)
         {
             // Members
             for (auto& resource : branch)
