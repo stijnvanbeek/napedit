@@ -63,6 +63,7 @@ namespace nap
                 ImGui::SameLine();
                 if (mEditedID == resource->mID)
                 {
+                    ImGui::SetKeyboardFocusHere();
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                     ImGui::SetNextItemWidth((ImGui::GetWindowWidth() / 2) - ImGui::GetCursorPosX() - 10);
                     if (ImGui::InputText("###RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
