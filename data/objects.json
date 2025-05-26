@@ -61,7 +61,7 @@
                     "Content": {
                         "Type": "nap::gui::Panel",
                         "mID": "Panel",
-                        "Title": "Panel",
+                        "Title": "MainPanel",
                         "Style": "",
                         "Position": {
                             "x": 0.0,
@@ -78,27 +78,77 @@
                         },
                         "Alpha": 1.0,
                         "Border": true,
+                        "TitleBar": false,
                         "Content": {
                             "Type": "nap::gui::HorizontalLayout",
                             "mID": "HorizontalLayout",
                             "Title": "",
                             "Style": "",
-                            "ColumnWidths": [],
-                            "Borders": true,
+                            "ColumnWidths": [
+                                1.0,
+                                2.0
+                            ],
+                            "Borders": false,
+                            "Resizable": true,
+                            "RelativeSizes": true,
                             "Content": [
                                 {
-                                    "Type": "nap::gui::GuiLink",
-                                    "mID": "ResourceListLink",
-                                    "Title": "",
+                                    "Type": "nap::gui::Panel",
+                                    "mID": "Panel_083c99",
+                                    "Title": "Resources",
                                     "Style": "",
-                                    "Link": "ResourceList"
+                                    "Position": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "Size": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "Flags": {
+                                        "NoScrollBar": false,
+                                        "NoScrollWithMouse": false,
+                                        "HorizontalScrollBar": false
+                                    },
+                                    "Alpha": 1.0,
+                                    "Border": true,
+                                    "TitleBar": true,
+                                    "Content": {
+                                        "Type": "nap::gui::GuiLink",
+                                        "mID": "GuiLink",
+                                        "Title": "",
+                                        "Style": "",
+                                        "Link": "ResourceList"
+                                    }
                                 },
                                 {
-                                    "Type": "nap::gui::GuiLink",
-                                    "mID": "InspectorLink",
-                                    "Title": "",
+                                    "Type": "nap::gui::Panel",
+                                    "mID": "Panel_0041b8",
+                                    "Title": "Properties",
                                     "Style": "",
-                                    "Link": "Inspector"
+                                    "Position": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "Size": {
+                                        "x": 0.0,
+                                        "y": 0.0
+                                    },
+                                    "Flags": {
+                                        "NoScrollBar": false,
+                                        "NoScrollWithMouse": false,
+                                        "HorizontalScrollBar": false
+                                    },
+                                    "Alpha": 1.0,
+                                    "Border": true,
+                                    "TitleBar": true,
+                                    "Content": {
+                                        "Type": "nap::gui::GuiLink",
+                                        "mID": "GuiLink_5add7a",
+                                        "Title": "",
+                                        "Style": "",
+                                        "Link": "Inspector"
+                                    }
                                 }
                             ]
                         }
