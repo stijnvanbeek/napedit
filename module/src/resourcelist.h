@@ -41,6 +41,7 @@ namespace nap
             std::string mEnteredID;
 
             float mTypeColumnOffset = 0;
+            bool mStartEditing = false;
 
             TypeMenu mTypeMenu;
             Core& mCore;
@@ -61,9 +62,18 @@ namespace nap
                 bool opened = ImGui::TreeNodeEx(label.c_str(), flags);
 
                 ImGui::SameLine();
+
+                if (mSelectedID == resource->mID && mStartEditing)
+                {
+                    mEditedID = resource->mID;
+                    mStartEditing = false;
+                    mEnteredID.clear();
+                    strcpy(mRenameBuffer, mEditedID.c_str());
+                    ImGui::SetKeyboardFocusHere();
+                }
+
                 if (mEditedID == resource->mID)
                 {
-                    ImGui::SetKeyboardFocusHere();
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                     ImGui::SetNextItemWidth((ImGui::GetWindowWidth() / 2) - ImGui::GetCursorPosX() - 10);
                     if (ImGui::InputText("###RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))

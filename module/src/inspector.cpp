@@ -14,14 +14,8 @@ namespace nap
         void Inspector::draw()
         {
             ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), false);
-            ImGui::Text("Inspector");
 
-            if (mResourceListGui->getSelectedID().empty())
-            {
-                ImGui::EndChild();
-                return;
-            }
-
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
             ImGui::BeginColumns("###InspectorColumns", 3);
             auto nameOffset = ImGui::GetCursorPosX();
             ImGui::Text("Name");
@@ -36,6 +30,13 @@ namespace nap
             auto typeOffset = ImGui::GetCursorPosX();
             ImGui::Text("Type");
             ImGui::EndColumns();
+            ImGui::PopStyleColor();
+
+            if (mResourceListGui->getSelectedID().empty())
+            {
+                ImGui::EndChild();
+                return;
+            }
 
             auto resource = mModel->findResource(mResourceListGui->getSelectedID());
             assert(resource != nullptr);

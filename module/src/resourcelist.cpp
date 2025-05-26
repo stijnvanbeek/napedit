@@ -45,12 +45,14 @@ namespace nap
             // List of all resources
             ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false);
 
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
             ImGui::BeginColumns("##ResourcesListColumns", 2);
             ImGui::Text("Name");
             ImGui::NextColumn();
             mTypeColumnOffset = ImGui::GetCursorPosX();
             ImGui::Text("Type");
             ImGui::EndColumns();
+            ImGui::PopStyleColor();
 
             drawTree(mModel->getTree().mGroups);
             drawTree(mModel->getTree().mResources);
@@ -58,14 +60,22 @@ namespace nap
 
             if (ImGui::IsMouseDoubleClicked(0))
             {
-                mEditedID = mSelectedID;
-                strcpy(mRenameBuffer, mEditedID.c_str());
+                mStartEditing = true;
+            }
+
+            if (ImGui::IsMouseClicked(0))
+            {
+                if (!mEditedID.empty())
+                    mEnteredID = mRenameBuffer;
             }
 
             if (!mEnteredID.empty())
             {
-                mModel->renameResource(mSelectedID, mEnteredID);
-                mSelectedID = mEnteredID;
+                if (mEnteredID != mSelectedID && mModel->findResource(mEnteredID) == nullptr)
+                {
+                    mModel->renameResource(mSelectedID, mEnteredID);
+                    mSelectedID = mEnteredID;
+                }
                 mEnteredID.clear();
                 mEditedID.clear();
             }
