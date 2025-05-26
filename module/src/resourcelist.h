@@ -59,7 +59,11 @@ namespace nap
                     flags |= ImGuiTreeNodeFlags_Leaf;
 
                 std::string label = "###" + resource->mID;
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
                 bool opened = ImGui::TreeNodeEx(label.c_str(), flags);
+                ImGui::PopStyleColor();
+                ImGui::PopStyleColor();
 
                 ImGui::SameLine();
 
