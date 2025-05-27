@@ -45,7 +45,7 @@ namespace nap
             // List of all resources
             ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false);
 
-            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
             ImGui::BeginColumns("##ResourcesListColumns", 2);
             ImGui::Text("Name");
             ImGui::NextColumn();

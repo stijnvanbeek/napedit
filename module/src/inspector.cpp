@@ -2,7 +2,7 @@
 
 RTTI_BEGIN_CLASS(nap::edit::Inspector)
     RTTI_PROPERTY("Model", &nap::edit::Inspector::mModel, nap::rtti::EPropertyMetaData::Required)
-    RTTI_PROPERTY("ResourceListGui", &nap::edit::Inspector::mResourceListGui, nap::rtti::EPropertyMetaData::Required)
+    RTTI_PROPERTY("ResourceListGui", &nap::edit::Inspector::mResourceList, nap::rtti::EPropertyMetaData::Required)
 RTTI_END_CLASS
 
 namespace nap
@@ -10,6 +10,21 @@ namespace nap
 
     namespace edit
     {
+
+        bool Inspector::init(utility::ErrorState &errorState)
+        {
+            // Scope for linked property editors
+            auto allPropertyEditors = RTTI_OF(IPropertyEditor).get_derived_classes();
+            for (auto& type : allPropertyEditors)
+                if (type.can_create_instance())
+                {
+                    auto instance = type.create<IPropertyEditor>();
+                    mPropertyEditors[instance->getType()] = std::unique_ptr<IPropertyEditor>(instance);
+                }
+
+            return true;
+        }
+
 
         void Inspector::draw()
         {
@@ -32,22 +47,30 @@ namespace nap
             ImGui::EndColumns();
             ImGui::PopStyleColor();
 
-            if (mResourceListGui->getSelectedID().empty())
+            if (mResourceList->getSelectedID().empty())
             {
                 ImGui::EndChild();
                 return;
             }
 
-            auto resource = mModel->findResource(mResourceListGui->getSelectedID());
+            auto resource = mModel->findResource(mResourceList->getSelectedID());
             assert(resource != nullptr);
             auto type = resource->get_type();
             for (auto& property : type.get_properties())
             {
-                ImGui::SetCursorPosX(nameOffset);
-                ImGui::Text(property.get_name().to_string().c_str());
-                ImGui::SameLine();
-                ImGui::SetCursorPosX(typeOffset);
-                ImGui::Text(property.get_type().get_name().to_string().c_str());
+                auto propertyType = property.get_type();
+                auto propertyEditor = mPropertyEditors.find(propertyType);
+                if (propertyEditor != mPropertyEditors.end())
+                {
+                    rtti::Variant var = resource;
+                    propertyEditor->second->show(nameOffset, valueOffset, typeOffset, var, property);
+                    if (property.get_name().to_string() == "mID")
+                        mResourceList->setSelectedID(property.get_value(var).to_string());
+                }
+                else {
+                    ImGui::SetCursorPosX(nameOffset);
+                    ImGui::Text("No editor for property type '%s'", propertyType.get_name().to_string().c_str());
+                }
             }
 
 

@@ -24,6 +24,7 @@ namespace nap
             // Inherited
             bool init(utility::ErrorState& errorState) override;
 
+            void setSelectedID(const std::string& id) { mSelectedID = id; }
             const std::string& getSelectedID() const { return mSelectedID; }
 
         private:
@@ -51,7 +52,6 @@ namespace nap
         template <typename T>
         void ResourceList::drawTree(const std::vector<ResourcePtr<T>>& branch)
         {
-            // Members
             for (auto& resource : branch)
             {
                 ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
@@ -95,7 +95,9 @@ namespace nap
                 auto type = resource->get_type();
                 ImGui::SameLine();
                 ImGui::SetCursorPosX(mTypeColumnOffset);
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
                 ImGui::Text(type.get_name().to_string().c_str());
+                ImGui::PopStyleColor();
 
                 if (opened)
                 {
