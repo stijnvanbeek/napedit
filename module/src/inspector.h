@@ -30,11 +30,14 @@ namespace nap
         private:
             void draw() override;
 
+            void drawObject(rtti::Variant& object, rtti::TypeInfo type, float nameOffset, float valueOffset, float typeOffset);
+
             float mValueColumnOffset = 0.f;
             float mTypeColumnOffset = 0.f;
 
             std::map<const rtti::TypeInfo, std::unique_ptr<IPropertyEditor>> mPropertyEditors;
         };
+
     
     }
 }

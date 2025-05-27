@@ -55,26 +55,77 @@ namespace nap
 
             auto resource = mModel->findResource(mResourceList->getSelectedID());
             assert(resource != nullptr);
-            auto type = resource->get_type();
+            rtti::Variant var = resource;
+            rtti::TypeInfo type = resource->get_type();
+            drawObject(var, type, nameOffset, valueOffset, typeOffset);
+
+            ImGui::EndChild();
+        }
+
+
+        void Inspector::drawObject(rtti::Variant& object, rtti::TypeInfo type, float nameOffset, float valueOffset, float typeOffset)
+        {
             for (auto& property : type.get_properties())
             {
                 auto propertyType = property.get_type();
                 auto propertyEditor = mPropertyEditors.find(propertyType);
                 if (propertyEditor != mPropertyEditors.end())
                 {
-                    rtti::Variant var = resource;
-                    propertyEditor->second->show(nameOffset, valueOffset, typeOffset, var, property);
+                    propertyEditor->second->show(nameOffset, valueOffset, typeOffset, object, property);
                     if (property.get_name().to_string() == "mID")
-                        mResourceList->setSelectedID(property.get_value(var).to_string());
+                        mResourceList->setSelectedID(property.get_value(object).to_string());
+                }
+                else if (propertyType.is_class())
+                {
+                    if (propertyType.is_array())
+                    {
+
+                    }
+                    else if (propertyType.is_wrapper())
+                    {
+
+                    }
+                    else {
+                        std::string label = "###" + property.get_name().to_string();
+                        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
+                        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
+                        bool opened = ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap);
+                        ImGui::PopStyleColor();
+                        ImGui::PopStyleColor();
+                        ImGui::SameLine();
+
+                        ImGui::Text(property.get_name().to_string().c_str());
+                        ImGui::SameLine();
+
+                        ImGui::SetCursorPosX(typeOffset);
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                        ImGui::Text(propertyType.get_name().to_string().c_str());
+                        ImGui::PopStyleColor();
+
+                        if (opened)
+                        {
+                            auto nestedObject = property.get_value(object);
+                            drawObject(nestedObject, property.get_type(), nameOffset, valueOffset, typeOffset);
+                            property.set_value(object, nestedObject);
+                            ImGui::TreePop();
+                        }
+                    }
                 }
                 else {
                     ImGui::SetCursorPosX(nameOffset);
-                    ImGui::Text("No editor for property type '%s'", propertyType.get_name().to_string().c_str());
+                    ImGui::Text(property.get_name().to_string().c_str());
+                    ImGui::SameLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                    ImGui::SetCursorPosX(valueOffset);
+                    ImGui::Text("No editor for type");
+
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosX(typeOffset);
+                    ImGui::Text(propertyType.get_name().to_string().c_str());
+                    ImGui::PopStyleColor();
                 }
             }
-
-
-            ImGui::EndChild();
         }
 
     }
