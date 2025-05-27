@@ -94,6 +94,7 @@ namespace nap
                         ImGui::PopStyleColor();
                         ImGui::SameLine();
 
+                        auto namePosX = ImGui::GetCursorPosX();
                         ImGui::Text(property.get_name().to_string().c_str());
                         ImGui::SameLine();
 
@@ -105,7 +106,7 @@ namespace nap
                         if (opened)
                         {
                             auto nestedObject = property.get_value(object);
-                            drawObject(nestedObject, property.get_type(), nameOffset, valueOffset, typeOffset);
+                            drawObject(nestedObject, property.get_type(), namePosX, valueOffset, typeOffset);
                             property.set_value(object, nestedObject);
                             ImGui::TreePop();
                         }
