@@ -15,21 +15,6 @@ namespace nap
     namespace edit
     {
 
-        void PropertyEditorSimple::show(float nameOffset, float valueOffset, float typeOffset, rtti::Variant &var, const rtti::Property &property)
-        {
-            ImGui::SetCursorPosX(nameOffset);
-            ImGui::Text(property.get_name().to_string().c_str());
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(valueOffset - ImGui::GetStyle().FramePadding.x);
-            drawValue(typeOffset - valueOffset - ImGui::GetStyle().FramePadding.x * 2, var, property);
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(typeOffset);
-            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
-            ImGui::Text(property.get_type().get_name().to_string().c_str());
-            ImGui::PopStyleColor();
-        }
-
-
         void PropertyEditorString::drawValue(float width, rtti::Variant &var, const rtti::Property &property)
         {
             std::string value = property.get_value(var).to_string();

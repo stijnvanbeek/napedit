@@ -15,28 +15,14 @@ namespace nap
             IPropertyEditor() = default;
             virtual ~IPropertyEditor() = default;
 
-            virtual void show(float nameOffset, float valueOffset, float typeOffset, rtti::Variant& object, const rtti::Property& property) = 0;
+            virtual void drawValue(float width, rtti::Variant& object, const rtti::Property& property) = 0;
             virtual const rtti::TypeInfo getType() const = 0;
         };
 
 
-        class PropertyEditorSimple : public IPropertyEditor
+        class PropertyEditorString : public IPropertyEditor
         {
             RTTI_ENABLE(IPropertyEditor)
-            
-        public:
-            PropertyEditorSimple() = default;
-            void show(float nameOffset, float valueOffset, float typeOffset, rtti::Variant& object, const rtti::Property& property) override final;
-            virtual const rtti::TypeInfo getType() const = 0;
-
-        private:
-            virtual void drawValue(float width, rtti::Variant& object, const rtti::Property& property) = 0;
-        };
-
-
-        class PropertyEditorString : public PropertyEditorSimple
-        {
-            RTTI_ENABLE(PropertyEditorSimple)
 
         public:
             PropertyEditorString() = default;
@@ -45,9 +31,9 @@ namespace nap
         };
 
 
-        class PropertyEditorBool : public PropertyEditorSimple
+        class PropertyEditorBool : public IPropertyEditor
         {
-            RTTI_ENABLE(PropertyEditorSimple)
+            RTTI_ENABLE(IPropertyEditor)
 
         public:
             PropertyEditorBool() = default;
@@ -56,9 +42,9 @@ namespace nap
         };
 
 
-        class PropertyEditorFloat : public PropertyEditorSimple
+        class PropertyEditorFloat : public IPropertyEditor
         {
-            RTTI_ENABLE(PropertyEditorSimple)
+            RTTI_ENABLE(IPropertyEditor)
 
         public:
             PropertyEditorFloat() = default;
@@ -67,9 +53,9 @@ namespace nap
         };
 
 
-        class PropertyEditorDouble : public PropertyEditorSimple
+        class PropertyEditorDouble : public IPropertyEditor
         {
-            RTTI_ENABLE(PropertyEditorSimple)
+            RTTI_ENABLE(IPropertyEditor)
 
         public:
             PropertyEditorDouble() = default;
@@ -78,9 +64,9 @@ namespace nap
         };
 
 
-        class PropertyEditorInt : public PropertyEditorSimple
+        class PropertyEditorInt : public IPropertyEditor
         {
-            RTTI_ENABLE(PropertyEditorSimple)
+            RTTI_ENABLE(IPropertyEditor)
 
         public:
             PropertyEditorInt() = default;
@@ -89,9 +75,9 @@ namespace nap
         };
 
 
-        class PropertyEditorVec2 : public PropertyEditorSimple
+        class PropertyEditorVec2 : public IPropertyEditor
         {
-            RTTI_ENABLE(PropertyEditorSimple)
+            RTTI_ENABLE(IPropertyEditor)
 
         public:
             PropertyEditorVec2() = default;
@@ -100,9 +86,9 @@ namespace nap
         };
 
 
-        class PropertyEditorVec3 : public PropertyEditorSimple
+        class PropertyEditorVec3 : public IPropertyEditor
         {
-            RTTI_ENABLE(PropertyEditorSimple)
+            RTTI_ENABLE(IPropertyEditor)
 
         public:
             PropertyEditorVec3() = default;
@@ -111,9 +97,9 @@ namespace nap
         };
 
 
-        class PropertyEditorVec4 : public PropertyEditorSimple
+        class PropertyEditorVec4 : public IPropertyEditor
         {
-            RTTI_ENABLE(PropertyEditorSimple)
+            RTTI_ENABLE(IPropertyEditor)
 
         public:
             PropertyEditorVec4() = default;

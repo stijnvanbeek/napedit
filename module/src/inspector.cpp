@@ -28,8 +28,8 @@ namespace nap
 
         void Inspector::draw()
         {
+            // Draw column headers
             ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), false);
-
             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
             ImGui::BeginColumns("###InspectorColumns", 3);
             auto nameOffset = ImGui::GetCursorPosX();
@@ -53,6 +53,7 @@ namespace nap
                 return;
             }
 
+            // Draw selected resource
             auto resource = mModel->findResource(mResourceList->getSelectedID());
             assert(resource != nullptr);
             rtti::Variant var = resource;
@@ -69,62 +70,93 @@ namespace nap
             {
                 auto propertyType = property.get_type();
                 auto propertyEditor = mPropertyEditors.find(propertyType);
+                bool opened = false;
+
+                // Draw tree node for objects and arrays
+                if (propertyEditor == mPropertyEditors.end() && propertyType.is_class() && !propertyType.is_wrapper())
+                {
+                    std::string label = "###" + property.get_name().to_string();
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
+                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
+                    opened = ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap);
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleColor();
+                    ImGui::SameLine();
+                }
+                else
+                    ImGui::SetCursorPosX(nameOffset);
+
+                // Draw name
+                ImGui::Text(property.get_name().to_string().c_str());
+                ImGui::SameLine();
+
+                // Draw editor
+                ImGui::SetCursorPosX(valueOffset);
+                auto width = typeOffset - valueOffset - ImGui::GetStyle().FramePadding.x * 2;
                 if (propertyEditor != mPropertyEditors.end())
                 {
-                    propertyEditor->second->show(nameOffset, valueOffset, typeOffset, object, property);
+                    propertyEditor->second->drawValue(width, object, property);
                     if (property.get_name().to_string() == "mID")
                         mResourceList->setSelectedID(property.get_value(object).to_string());
                 }
-                else if (propertyType.is_class())
+                else if (propertyType.is_enumeration())
+                {
+                    auto enumeration = property.get_enumeration();
+                    auto names = enumeration.get_names();
+                    ImGui::SetNextItemWidth(width);
+                    auto label = "###" + property.get_name().to_string();
+                    if (ImGui::BeginCombo(label.c_str(), enumeration.value_to_name(property.get_value(object)).to_string().c_str()))
+                    {
+                        for (auto& name : names)
+                        {
+                            if (ImGui::Selectable(name.to_string().c_str()))
+                                property.set_value(object, enumeration.name_to_value(name));
+                        }
+                        ImGui::EndCombo();
+                    }
+                }
+                else if (propertyType.is_class() && propertyType.is_wrapper())
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                    ImGui::Text("No editor for pointer");
+                    ImGui::PopStyleColor();
+                }
+                else if (!opened)
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                    ImGui::Text("No editor for type");
+                    ImGui::PopStyleColor();
+                }
+                ImGui::SameLine();
+
+                // Draw type
+                ImGui::SetCursorPosX(typeOffset);
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                ImGui::Text(propertyType.get_name().to_string().c_str());
+                ImGui::PopStyleColor();
+
+                if (opened)
                 {
                     if (propertyType.is_array())
                     {
-
-                    }
-                    else if (propertyType.is_wrapper())
-                    {
-
-                    }
-                    else {
-                        std::string label = "###" + property.get_name().to_string();
-                        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
-                        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
-                        bool opened = ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap);
-                        ImGui::PopStyleColor();
-                        ImGui::PopStyleColor();
-                        ImGui::SameLine();
-
-                        auto namePosX = ImGui::GetCursorPosX();
-                        ImGui::Text(property.get_name().to_string().c_str());
-                        ImGui::SameLine();
-
-                        ImGui::SetCursorPosX(typeOffset);
-                        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
-                        ImGui::Text(propertyType.get_name().to_string().c_str());
-                        ImGui::PopStyleColor();
-
-                        if (opened)
+                        auto label = "###" + property.get_name().to_string();
+                        auto var = property.get_value(object);
+                        assert(var.is_array());
+                        auto array = var.create_array_view();
+                        auto size = array.get_size();
+                        for (auto i = 0; i < array.get_size(); ++i)
                         {
-                            auto nestedObject = property.get_value(object);
-                            drawObject(nestedObject, property.get_type(), namePosX, valueOffset, typeOffset);
-                            property.set_value(object, nestedObject);
-                            ImGui::TreePop();
+                            auto element = array.get_value(i);
+                            drawObject(element, element.get_type(), nameOffset + 25, valueOffset, typeOffset);
                         }
                     }
-                }
-                else {
-                    ImGui::SetCursorPosX(nameOffset);
-                    ImGui::Text(property.get_name().to_string().c_str());
-                    ImGui::SameLine();
-
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
-                    ImGui::SetCursorPosX(valueOffset);
-                    ImGui::Text("No editor for type");
-
-                    ImGui::SameLine();
-                    ImGui::SetCursorPosX(typeOffset);
-                    ImGui::Text(propertyType.get_name().to_string().c_str());
-                    ImGui::PopStyleColor();
+                    else
+                    {
+                        auto nestedObject = property.get_value(object);
+                        drawObject(nestedObject, property.get_type(), nameOffset + 25, valueOffset, typeOffset);
+                        property.set_value(object, nestedObject);
+                    }
+                    ImGui::TreePop();
                 }
             }
         }
