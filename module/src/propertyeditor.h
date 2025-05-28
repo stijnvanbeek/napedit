@@ -15,7 +15,7 @@ namespace nap
             IPropertyEditor() = default;
             virtual ~IPropertyEditor() = default;
 
-            virtual void drawValue(float width, rtti::Variant& object, const rtti::Property& property) = 0;
+            virtual bool drawValue(rtti::Variant& value, const std::string& label, float width) = 0;
             virtual const rtti::TypeInfo getType() const = 0;
         };
 
@@ -27,7 +27,7 @@ namespace nap
         public:
             PropertyEditorString() = default;
             const rtti::TypeInfo getType() const override final { return RTTI_OF(std::string); }
-            void drawValue(float width, rtti::Variant& object, const rtti::Property &property) override final;
+            bool drawValue(rtti::Variant& value, const std::string& label, float width) override final;
         };
 
 
@@ -38,7 +38,7 @@ namespace nap
         public:
             PropertyEditorBool() = default;
             const rtti::TypeInfo getType() const override final { return RTTI_OF(bool); }
-            void drawValue(float width, rtti::Variant& object, const rtti::Property &property) override final;
+            bool drawValue(rtti::Variant& value, const std::string& label, float width) override final;
         };
 
 
@@ -49,7 +49,7 @@ namespace nap
         public:
             PropertyEditorFloat() = default;
             const rtti::TypeInfo getType() const override final { return RTTI_OF(float); }
-            void drawValue(float width, rtti::Variant& object, const rtti::Property &property) override final;
+            bool drawValue(rtti::Variant& value, const std::string& label, float width) override final;
         };
 
 
@@ -60,7 +60,7 @@ namespace nap
         public:
             PropertyEditorDouble() = default;
             const rtti::TypeInfo getType() const override final { return RTTI_OF(double); }
-            void drawValue(float width, rtti::Variant& object, const rtti::Property &property) override final;
+            bool drawValue(rtti::Variant& value, const std::string& label, float width) override final;
         };
 
 
@@ -71,7 +71,7 @@ namespace nap
         public:
             PropertyEditorInt() = default;
             const rtti::TypeInfo getType() const override final { return RTTI_OF(int); }
-            void drawValue(float width, rtti::Variant& object, const rtti::Property &property) override final;
+            bool drawValue(rtti::Variant& value, const std::string& label, float width) override final;
         };
 
 
@@ -82,7 +82,7 @@ namespace nap
         public:
             PropertyEditorVec2() = default;
             const rtti::TypeInfo getType() const override final { return RTTI_OF(glm::vec2); }
-            void drawValue(float width, rtti::Variant& object, const rtti::Property &property) override final;
+            bool drawValue(rtti::Variant& value, const std::string& label, float width) override final;
         };
 
 
@@ -93,7 +93,7 @@ namespace nap
         public:
             PropertyEditorVec3() = default;
             const rtti::TypeInfo getType() const override final { return RTTI_OF(glm::vec3); }
-            void drawValue(float width, rtti::Variant& object, const rtti::Property &property) override final;
+            bool drawValue(rtti::Variant& value, const std::string& label, float width) override final;
         };
 
 
@@ -104,7 +104,7 @@ namespace nap
         public:
             PropertyEditorVec4() = default;
             const rtti::TypeInfo getType() const override final { return RTTI_OF(glm::vec4); }
-            void drawValue(float width, rtti::Variant& object, const rtti::Property &property) override final;
+            bool drawValue(rtti::Variant& value, const std::string& label, float width) override final;
         };
 
 

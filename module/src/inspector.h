@@ -30,7 +30,10 @@ namespace nap
         private:
             void draw() override;
 
-            void drawObject(rtti::Variant& object, rtti::TypeInfo type, float nameOffset, float valueOffset, float typeOffset);
+            bool drawObject(rtti::Variant& object, rtti::TypeInfo type, float nameOffset, float valueOffset, float typeOffset);
+            bool drawValue(rtti::Variant& value, rtti::TypeInfo type, const std::string& name, float nameOffset, float valueOffset, float typeOffset);
+            bool drawArray(rtti::Variant& array, const std::string& name, float nameOffset, float valueOffset, float typeOffset);
+            bool drawEnum(rtti::Variant& var, rtti::TypeInfo type, const std::string& name, float valueWidth);
 
             float mValueColumnOffset = 0.f;
             float mTypeColumnOffset = 0.f;
