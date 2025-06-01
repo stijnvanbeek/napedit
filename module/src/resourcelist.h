@@ -85,11 +85,14 @@ namespace nap
                     ImGui::PopStyleVar();
                 }
                 else {
-                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID, ImGuiSelectableFlags_SpanAvailWidth))
+                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID, ImGuiSelectableFlags_SpanAvailWidth) || ImGui::IsItemClicked(1))
                     {
                         mSelectedID = resource->mID;
                         mEditedID.clear();
                     }
+                    if (ImGui::IsItemHovered())
+                        if (ImGui::IsMouseDoubleClicked(0))
+                            mStartEditing = true;
                 }
 
                 auto type = resource->get_type();

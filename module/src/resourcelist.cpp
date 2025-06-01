@@ -54,14 +54,10 @@ namespace nap
 
 			drawTree(mModel->getTree().mGroups);
 			drawTree(mModel->getTree().mResources);
+
 			ImGui::EndChild();
 
-			if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered())
-			{
-				mStartEditing = true;
-			}
-
-			if (!mEnteredID.empty() && ImGui::IsMouseClicked(0))
+			if (!mEditedID.empty() && ImGui::IsMouseClicked(0))
 				mEnteredID = mRenameBuffer;
 
 			if (!mEnteredID.empty())
@@ -143,9 +139,9 @@ namespace nap
 				ImGui::EndPopup();
 			}
 
+			// Popup sub menus
 			if (!chosenPopup.empty())
 				ImGui::OpenPopup(chosenPopup.c_str());
-
 			if (ImGui::BeginPopup("##AddResourcePopup"))
 			{
 				if (mTypeMenu.show())
