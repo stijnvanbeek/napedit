@@ -47,8 +47,8 @@ namespace nap
             if (mResourceList->getSelectedID().empty())
                 return;
 
-            ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), false);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 30);
+            ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), true);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 
             // Check if selected resource has changed
             if (mResourceList->getSelectedID() != mSelectedResourceID)
@@ -192,12 +192,10 @@ namespace nap
                 if (drawEnum(value, type, path, name, valueWidth))
                     valueChanged = true;
             }
-            else if (type.is_class() && type.is_wrapper())
+            else if (type.is_derived_from<rtti::ObjectPtrBase>())
             {
-                // Pointer
-                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
-                ImGui::Text("No editor for pointer");
-                ImGui::PopStyleColor();
+                // Draw resource pointer
+
             }
             else if (!type.is_array() && !type.is_class())
             {

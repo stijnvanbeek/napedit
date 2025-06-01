@@ -51,8 +51,8 @@ namespace nap
 			ImGui::PopStyleColor();
 
 			// List of all resources
-			ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false);
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 30);
+			ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), true);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 
 			drawTree(mModel->getTree().mGroups);
 			drawTree(mModel->getTree().mResources);
