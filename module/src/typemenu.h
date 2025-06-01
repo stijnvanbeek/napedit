@@ -23,6 +23,7 @@ namespace nap
             const rtti::TypeInfo* mSelectedType = nullptr;
             int mSelectedTypeIndex = -1;
             std::string mSelectedTypeID;
+            bool mFirstShow = true;
         };
 
     } // edit

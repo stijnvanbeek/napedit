@@ -20,6 +20,9 @@ namespace nap
             mSelectedTypeID.clear();
             mSelectedTypeID = -1;
             mFilteredTypes.clear();
+            mSearchFilter[0] = '\0';
+
+            mFirstShow = true;
         }
 
 
@@ -35,10 +38,15 @@ namespace nap
                     if (utility::contains(pair.first, mSearchFilter, false))
                         mFilteredTypes[pair.first] = pair.second;
             }
+            if (mFirstShow)
+            {
+                ImGui::SetKeyboardFocusHere();
+                mFirstShow = false;
+            }
 
             // List with all available resource types filtered
             auto& showedMap = mFilteredTypes;
-            if (showedMap.empty())
+            if (std::string(mSearchFilter).empty())
                 showedMap = mTypes;
 
             if (ImGui::ListBoxHeader("##TypesListBox", showedMap.size(), 20))
@@ -56,6 +64,10 @@ namespace nap
                     }
                     resourceTypePair++;
                 }
+
+                if (showedMap.empty())
+                    ImGui::Selectable("Nothing found", false, ImGuiSelectableFlags_Disabled);
+
                 ImGui::ListBoxFooter();
             }
 
