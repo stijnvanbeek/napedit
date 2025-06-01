@@ -29,27 +29,26 @@ namespace nap
         void Inspector::draw()
         {
             // Draw column headers
-            ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), false);
             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
             ImGui::BeginColumns("###InspectorColumns", 3);
             auto nameOffset = ImGui::GetCursorPosX();
             ImGui::Text("Name");
             ImGui::NextColumn();
 
-            auto valueOffset = ImGui::GetCursorPosX();
+            auto valueOffset = ImGui::GetCursorPosX() - 30;
             ImGui::Text("Value");
             ImGui::NextColumn();
 
-            auto typeOffset = ImGui::GetCursorPosX();
+            auto typeOffset = ImGui::GetCursorPosX() - 30;
             ImGui::Text("Type");
             ImGui::EndColumns();
             ImGui::PopStyleColor();
 
             if (mResourceList->getSelectedID().empty())
-            {
-                ImGui::EndChild();
                 return;
-            }
+
+            ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), false);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 30);
 
             // Check if selected resource has changed
             if (mResourceList->getSelectedID() != mSelectedResourceID)

@@ -41,7 +41,7 @@ namespace nap
             std::string mEditedID;
             std::string mEnteredID;
 
-            float mTypeColumnOffset = 0;
+            float mTypeColumnOffset = 0.f;
             bool mStartEditing = false;
 
             TypeMenu mTypeMenu;

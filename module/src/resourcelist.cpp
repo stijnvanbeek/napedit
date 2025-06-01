@@ -40,17 +40,19 @@ namespace nap
 
 		void ResourceList::draw()
 		{
-			// List of all resources
-			ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false);
-
 			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX());
 			ImGui::BeginColumns("##ResourcesListColumns", 2);
 			ImGui::Text("Name");
 			ImGui::NextColumn();
-			mTypeColumnOffset = ImGui::GetCursorPosX();
+			mTypeColumnOffset = ImGui::GetCursorPosX() - 30;
 			ImGui::Text("Type");
 			ImGui::EndColumns();
 			ImGui::PopStyleColor();
+
+			// List of all resources
+			ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), false);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 30);
 
 			drawTree(mModel->getTree().mGroups);
 			drawTree(mModel->getTree().mResources);
