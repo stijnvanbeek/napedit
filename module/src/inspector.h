@@ -1,4 +1,4 @@
-#pragma once
+  #pragma once
 
 #include <resourcelist.h>
 #include <propertyeditor.h>
@@ -26,17 +26,49 @@ namespace nap
                 auto editor = std::make_unique<T>();
                 mPropertyEditors[editor->getType()] = std::move(editor);
             }
-            
+
+        private:
+            class Selection
+            {
+            public:
+                Selection() = default;
+                void set(const rtti::Path& path, Resource* root);
+                void set(const rtti::Path& arrayPath, int index, Resource* root);
+                void clear() { mIsValid = false; }
+                bool isValid() const { return mIsValid; }
+                bool isArrayElement() const { return mIsArrayElement; }
+                bool isArray() const { return mResolvedPath.getType().is_array(); }
+                int getArrayIndex() const { return mArrayIndex; }
+                rtti::ResolvedPath& getResolvedPath() { return mResolvedPath; }
+                const rtti::Path& getPath() const { return mPath; }
+
+            private:
+                rtti::Path mPath;
+                rtti::ResolvedPath mResolvedPath;
+                bool mIsArrayElement = false;
+                int mArrayIndex = -1;
+                bool mIsValid = false;
+            };
+
         private:
             void draw() override;
 
-            bool drawObject(rtti::Variant& object, rtti::TypeInfo type, float nameOffset, float valueOffset, float typeOffset);
-            bool drawValue(rtti::Variant& value, rtti::TypeInfo type, const std::string& name, float nameOffset, float valueOffset, float typeOffset);
-            bool drawArray(rtti::Variant& array, const std::string& name, float nameOffset, float valueOffset, float typeOffset);
-            bool drawEnum(rtti::Variant& var, rtti::TypeInfo type, const std::string& name, float valueWidth);
+            void drawContextMenu();
 
-            float mValueColumnOffset = 0.f;
-            float mTypeColumnOffset = 0.f;
+            bool drawObject(rtti::Variant& object, rtti::TypeInfo type, const rtti::Path& path, float nameOffset, float valueOffset, float typeOffset);
+            bool drawValue(rtti::Variant& value, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, bool isArrayElement, int arrayIndex, float nameOffset, float valueOffset, float typeOffset);
+            bool drawArray(rtti::Variant& array, const rtti::Path& path, const std::string& name, float nameOffset, float valueOffset, float typeOffset);
+            bool drawEnum(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, float valueWidth);
+
+            void insertArrayElement(Selection& selection);
+            void removeArrayElement(Selection& selection);
+            void moveArrayElementUp(Selection& selection);
+            void moveArrayElementDown(Selection& selection);
+            void addArrayElement(Selection& selection);
+
+            std::string mSelectedResourceID;
+            Resource* mSelectedResource = nullptr;
+            Selection mSelection;
 
             std::map<const rtti::TypeInfo, std::unique_ptr<IPropertyEditor>> mPropertyEditors;
         };
