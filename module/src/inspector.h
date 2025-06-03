@@ -2,8 +2,9 @@
 
 #include <resourcelist.h>
 #include <propertyeditor.h>
+#include <resourcemenu.h>
 
-namespace nap
+  namespace nap
 {
     namespace edit
     {
@@ -59,6 +60,7 @@ namespace nap
             bool drawValue(rtti::Variant& value, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, bool isArrayElement, int arrayIndex, float nameOffset, float valueOffset, float typeOffset);
             bool drawArray(rtti::Variant& array, const rtti::Path& path, const std::string& name, float nameOffset, float valueOffset, float typeOffset);
             bool drawEnum(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, float valueWidth);
+            bool drawPointer(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const rtti::Path& parentPath, float valueWidth);
 
             void insertArrayElement(Selection& selection);
             void removeArrayElement(Selection& selection);
@@ -66,9 +68,11 @@ namespace nap
             void moveArrayElementDown(Selection& selection);
             void addArrayElement(Selection& selection);
 
-            std::string mSelectedResourceID;
-            Resource* mSelectedResource = nullptr;
+            std::string mInspectedResourceID;
+            Resource* mInspectedResource = nullptr;
             Selection mSelection;
+            ResourceMenu mResourceMenu;
+            bool mOpenResourceMenu = false;
 
             std::map<const rtti::TypeInfo, std::unique_ptr<IPropertyEditor>> mPropertyEditors;
         };

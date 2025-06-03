@@ -31,7 +31,7 @@ namespace nap
             void draw() override;
 
             template <typename T>
-            void drawTree(const std::vector<ResourcePtr<T>>& branch);
+            void drawTree(const std::vector<ResourcePtr<T>>& branch, float nameOffset);
 
             std::map<std::string, const rtti::TypeInfo*> mResourceTypes;
             std::map<std::string, const rtti::TypeInfo*> mGroupTypes;
@@ -42,6 +42,7 @@ namespace nap
             std::string mEnteredID;
 
             float mTypeColumnOffset = 0.f;
+            float mNameColumnOffset = 0.f;
             bool mStartEditing = false;
 
             TypeMenu mTypeMenu;
@@ -50,22 +51,25 @@ namespace nap
 
 
         template <typename T>
-        void ResourceList::drawTree(const std::vector<ResourcePtr<T>>& branch)
+        void ResourceList::drawTree(const std::vector<ResourcePtr<T>>& branch, float nameOffset)
         {
             for (auto& resource : branch)
             {
-                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
-                if (!resource->get_type().template is_derived_from<IGroup>())
-                    flags |= ImGuiTreeNodeFlags_Leaf;
+                bool opened = false;
+                if (resource->get_type().template is_derived_from<IGroup>())
+                {
+                    ImGui::SetCursorPosX(nameOffset - 15);
+                    std::string label = "###" + resource->mID;
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
+                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
+                    opened = ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap);
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleColor();
 
-                std::string label = "###" + resource->mID;
-                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
-                ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
-                bool opened = ImGui::TreeNodeEx(label.c_str(), flags);
-                ImGui::PopStyleColor();
-                ImGui::PopStyleColor();
-
-                ImGui::SameLine();
+                    ImGui::SameLine();
+                }
+                else
+                    ImGui::SetCursorPosX(nameOffset);
 
                 if (mSelectedID == resource->mID && mStartEditing)
                 {
@@ -85,7 +89,7 @@ namespace nap
                     ImGui::PopStyleVar();
                 }
                 else {
-                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID, ImGuiSelectableFlags_SpanAvailWidth) || ImGui::IsItemClicked(1))
+                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID, ImGuiSelectableFlags_SpanAvailWidth | ImGuiSelectableFlags_AllowItemOverlap) || ImGui::IsItemClicked(1))
                     {
                         mSelectedID = resource->mID;
                         mEditedID.clear();
@@ -107,8 +111,8 @@ namespace nap
                     if (rtti_cast<IGroup>(resource.get()) != nullptr)
                     {
                         auto group = static_cast<ResourceGroup*>(resource.get());
-                        drawTree(group->mMembers);
-                        drawTree(group->mChildren);
+                        drawTree(group->mMembers, nameOffset + 50);
+                        drawTree(group->mChildren, nameOffset + 50);
                     }
                     ImGui::TreePop();
                 }

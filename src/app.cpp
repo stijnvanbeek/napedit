@@ -7,8 +7,7 @@
 #include <inputrouter.h>
 #include <rendergnomoncomponent.h>
 
-#include <nap/group.h>
-#include <parametergroup.h>
+#include <testresource.h>
 
 #include <parameternumeric.h>
 
@@ -43,23 +42,17 @@ namespace nap
     	if (!error.check(mWindow != nullptr, "unable to find main window gui"))
     		return false;
 
+    	capFramerate(true);
+    	setFramerate(60.f);
+    	ImGui::GetIO().FontGlobalScale = 0.9f;
+
     	// Test
-    	ParameterGroup resources;
-    	resources.mID = "group";
-    	ParameterFloat res1;
-    	res1.mID = "res1";
-    	ParameterGroup subGroup;
-    	subGroup.mID = "subGroup";
-
-    	resources.mMembers.emplace_back(&res1);
-    	resources.mChildren.emplace_back(&subGroup);
-
-		IGroup* igroup = &resources;
-    	auto prop = igroup->getMembersProperty();
-    	auto members = prop.get_value(*igroup).get_value<std::vector<rtti::ObjectPtr<Object>>>();
-
-    	ResourceGroup* groupPtr = static_cast<ResourceGroup*>(static_cast<IGroup*>(&resources));
-    	auto type = groupPtr->getMemberType();
+    	TestResource testResource;
+    	ResourcePtr<TestResource> testResourcePtr = &testResource;
+    	rtti::Variant var = testResourcePtr;
+    	auto type = var.get_type();
+    	assert(type.is_wrapper());
+    	auto newPtr = var.get_wrapped_value<rtti::Object*>();
 
     	// All done!
         return true;
@@ -132,5 +125,6 @@ namespace nap
 		mInputService->processWindowEvents(*mRenderWindow, input_router, { &mScene->getRootEntity() });
 
     	mWindow->show();
+
     }
 }

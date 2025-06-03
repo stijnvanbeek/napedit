@@ -1,4 +1,7 @@
 #include "inspector.h"
+#include <model.h>
+
+#include "testresource.h"
 
 RTTI_BEGIN_CLASS(nap::edit::Inspector)
     RTTI_PROPERTY("Model", &nap::edit::Inspector::mModel, nap::rtti::EPropertyMetaData::Required)
@@ -47,27 +50,44 @@ namespace nap
             if (mResourceList->getSelectedID().empty())
                 return;
 
+            ImGui::SetNextWindowBgAlpha(0.3);
             ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), true);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 
             // Check if selected resource has changed
-            if (mResourceList->getSelectedID() != mSelectedResourceID)
+            if (mResourceList->getSelectedID() != mInspectedResourceID)
             {
                 mSelection.clear();
-                mSelectedResourceID = mResourceList->getSelectedID();
-                mSelectedResource = mModel->findResource(mResourceList->getSelectedID());
-                assert(mSelectedResource != nullptr);
+                mInspectedResourceID = mResourceList->getSelectedID();
+                mInspectedResource = mModel->findResource(mResourceList->getSelectedID());
+                assert(mInspectedResource != nullptr);
             }
 
             // Draw selected resource
             rtti::Path path;
-            rtti::Variant var = mSelectedResource;
-            rtti::TypeInfo type = mSelectedResource->get_type();
+            rtti::Variant var = mInspectedResource;
+            rtti::TypeInfo type = mInspectedResource->get_type();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 0));
             drawObject(var, type, path, nameOffset, valueOffset, typeOffset);
             ImGui::PopStyleVar();
 
             ImGui::EndChild();
+
+            // Popup resource selection
+            if (mOpenResourceMenu)
+            {
+                ImGui::OpenPopup("##ChooseResourcePopup");
+                mOpenResourceMenu = false;
+            }
+            ImGui::SetNextWindowBgAlpha(0.5f);
+            if (ImGui::BeginPopup("##ChooseResourcePopup"))
+            {
+                if (mResourceMenu.show())
+                {
+                    mSelection.getResolvedPath().getProperty().set_value(mInspectedResource, mResourceMenu.getSelectedResource());
+                }
+                ImGui::EndPopup();
+            }
 
             // Popup context menu
             drawContextMenu();
@@ -81,6 +101,7 @@ namespace nap
             {
                 if (mSelection.isArrayElement())
                 {
+                    ImGui::SetNextWindowBgAlpha(0.5f);
                     if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
                     {
                         if (ImGui::Selectable("Remove Element"))
@@ -151,6 +172,7 @@ namespace nap
             // Draw tree node for objects and arrays
             if (propertyEditor == mPropertyEditors.end() && type.is_class() && !type.is_wrapper())
             {
+                ImGui::SetCursorPosX(nameOffset - 15);
                 std::string label = "###" + name;
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
                 ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -168,9 +190,9 @@ namespace nap
                 (ImGui::IsItemClicked(1)))
             {
                 if (isArrayElement)
-                    mSelection.set(parentPath, arrayIndex, mSelectedResource);
+                    mSelection.set(parentPath, arrayIndex, mInspectedResource);
                 else
-                    mSelection.set(path, mSelectedResource);
+                    mSelection.set(path, mInspectedResource);
             }
             ImGui::SameLine();
 
@@ -195,7 +217,8 @@ namespace nap
             else if (type.is_derived_from<rtti::ObjectPtrBase>())
             {
                 // Draw resource pointer
-
+                if (drawPointer(value, type, path, parentPath, valueWidth))
+                    valueChanged = true;
             }
             else if (!type.is_array() && !type.is_class())
             {
@@ -216,12 +239,12 @@ namespace nap
                 if (type.is_array())
                 {
                     // Draw array elements
-                    if (drawArray(value, path, name, nameOffset + 25, valueOffset, typeOffset))
+                    if (drawArray(value, path, name, nameOffset + 50, valueOffset, typeOffset))
                         valueChanged = true;
                 }
                 else {
                     // Draw nested object
-                    if (drawObject(value, type, path, nameOffset + 25, valueOffset, typeOffset))
+                    if (drawObject(value, type, path, nameOffset + 50, valueOffset, typeOffset))
                         valueChanged = true;
                 }
                 ImGui::TreePop();
@@ -238,7 +261,7 @@ namespace nap
             for (auto i = 0; i < array.get_size(); ++i)
             {
                 auto element = array.get_value(i);
-                if (drawValue(element, element.get_type(), path, std::to_string(i), true, i, nameOffset + 25, valueOffset, typeOffset))
+                if (drawValue(element, element.get_type(), path, std::to_string(i), true, i, nameOffset, valueOffset, typeOffset))
                 {
                     array.set_value(i, element);
                     valueChanged = true;
@@ -271,6 +294,48 @@ namespace nap
         }
 
 
+        bool Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path,
+            const rtti::Path& parentPath, float valueWidth)
+        {
+            assert(var.get_type().is_wrapper());
+            rtti::Object* resource = var.get_value<rtti::ObjectPtr<rtti::Object>>().get();
+
+            auto x = ImGui::GetCursorPosX();
+            auto buttonWidth = ImGui::GetFrameHeight();
+            ImGui::SetNextItemWidth(valueWidth - buttonWidth);
+
+            bool selected = (mSelection.getPath() == path);
+            std::string label = resource == nullptr ? "Not set" : resource->mID;
+            auto flags = ImGuiSelectableFlags_SpanAvailWidth | ImGuiSelectableFlags_AllowItemOverlap;
+            flags = resource != nullptr ? flags : flags | ImGuiSelectableFlags_Disabled;
+            if (ImGui::Selectable(label.c_str(), selected, flags) ||
+                (ImGui::IsItemClicked(1)))
+                mSelection.set(path, mInspectedResource);
+
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(x + valueWidth - buttonWidth);
+            ImGui::SetNextItemWidth(buttonWidth + 25);
+            if ((ImGui::IsItemHovered() && ImGui::IsMouseClicked(1)) || ImGui::Button("..."))
+            {
+                auto& resources = mModel->getResources();
+                auto wrappedType = type.get_wrapped_type().get_raw_type();
+                std::set<rtti::Object*> exclude;
+                rtti::ResolvedPath resolvedParentPath;
+                if (parentPath.resolve(mInspectedResource, resolvedParentPath))
+                {
+                    auto parent = resolvedParentPath.getValue();
+                    auto parentType = resolvedParentPath.getType();
+                    if (parent.get_type().is_class() && !parent.get_type().is_array())
+                        exclude.emplace(parent.get_value<rtti::ObjectPtr<rtti::Object>>().get());
+                }
+                mResourceMenu.init(resources, &wrappedType, exclude);
+                mSelection.set(path, mInspectedResource);
+                mOpenResourceMenu = true;
+            }
+            return false;
+        }
+
+
         void Inspector::insertArrayElement(Selection &selection)
         {
             auto array = selection.getResolvedPath().getValue();
@@ -283,7 +348,7 @@ namespace nap
             selection.getResolvedPath().setValue(array);
             auto arrayPath = mSelection.getPath();
             arrayPath.popBack();
-            selection.set(arrayPath, mSelection.getArrayIndex(), mSelectedResource);
+            selection.set(arrayPath, mSelection.getArrayIndex(), mInspectedResource);
         }
 
 
@@ -308,7 +373,7 @@ namespace nap
             selection.getResolvedPath().setValue(array);
             auto arrayPath = selection.getPath();
             arrayPath.popBack();
-            selection.set(arrayPath, selection.getArrayIndex() - 1, mSelectedResource);
+            selection.set(arrayPath, selection.getArrayIndex() - 1, mInspectedResource);
         }
 
 
@@ -322,7 +387,7 @@ namespace nap
             selection.getResolvedPath().setValue(array);
             auto arrayPath = selection.getPath();
             arrayPath.popBack();
-            selection.set(arrayPath, selection.getArrayIndex() + 1, mSelectedResource);
+            selection.set(arrayPath, selection.getArrayIndex() + 1, mInspectedResource);
         }
 
 

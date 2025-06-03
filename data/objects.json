@@ -62,7 +62,7 @@
                         "Type": "nap::gui::Panel",
                         "mID": "Panel",
                         "Title": "MainPanel",
-                        "Style": "",
+                        "Style": "StyleDef",
                         "Position": {
                             "x": 0.0,
                             "y": 0.0
@@ -168,6 +168,41 @@
                     "Style": "",
                     "Model": "Model",
                     "ResourceListGui": "ResourceList"
+                },
+                {
+                    "Type": "nap::gui::StyleDef",
+                    "mID": "StyleDef",
+                    "FloatSettings": [],
+                    "SizeSettings": [
+                        {
+                            "Variable": "FramePadding (size)",
+                            "Value": {
+                                "x": 5.0,
+                                "y": 5.0
+                            }
+                        }
+                    ],
+                    "ColorSettings": [
+                        {
+                            "Variable": "Border",
+                            "Value": {
+                                "x": 0.30000001192092896,
+                                "y": 0.30000001192092896,
+                                "z": 0.30000001192092896,
+                                "w": 1.0
+                            }
+                        },
+                        {
+                            "Variable": "Separator",
+                            "Value": {
+                                "x": 0.30000001192092896,
+                                "y": 0.30000001192092896,
+                                "z": 0.30000001192092896,
+                                "w": 1.0
+                            }
+                        }
+                    ],
+                    "FontScaling": 1.0
                 }
             ],
             "Children": []

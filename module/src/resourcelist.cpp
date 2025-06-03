@@ -40,10 +40,13 @@ namespace nap
 
 		void ResourceList::draw()
 		{
+			ImGui::SetNextWindowBgAlpha(0.5f);
 			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX());
+
 			ImGui::BeginColumns("##ResourcesListColumns", 2);
+			mNameColumnOffset = ImGui::GetCursorPosX();
 			ImGui::Text("Name");
+
 			ImGui::NextColumn();
 			mTypeColumnOffset = ImGui::GetCursorPosX() - 30;
 			ImGui::Text("Type");
@@ -54,8 +57,10 @@ namespace nap
 			ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), true);
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 
-			drawTree(mModel->getTree().mGroups);
-			drawTree(mModel->getTree().mResources);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 0));
+			drawTree(mModel->getTree().mGroups, mNameColumnOffset);
+			drawTree(mModel->getTree().mResources, mNameColumnOffset);
+			ImGui::PopStyleVar();
 
 			ImGui::EndChild();
 
@@ -75,6 +80,7 @@ namespace nap
 
 			// Popup when right clicked on the resources list
 			std::string chosenPopup;
+			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
 			{
 				IGroup *selectedGroup = nullptr;
@@ -144,6 +150,7 @@ namespace nap
 			// Popup sub menus
 			if (!chosenPopup.empty())
 				ImGui::OpenPopup(chosenPopup.c_str());
+			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopup("##AddResourcePopup"))
 			{
 				if (mTypeMenu.show())
@@ -155,6 +162,7 @@ namespace nap
 				}
 				ImGui::EndPopup();
 			}
+			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopup("##AddGroupPopup"))
 			{
 				if (mTypeMenu.show())
