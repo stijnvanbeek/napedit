@@ -26,17 +26,42 @@ namespace nap
         }
 
 
+        struct TypeInputCallbackData
+        {
+            std::map<std::string, const rtti::TypeInfo*>* mTypes = nullptr;
+            std::map<std::string, const rtti::TypeInfo*>* mFilteredTypes = nullptr;
+            char* mSearchFilter;
+        };
+
+
+        int TypeInputCallBack(ImGuiInputTextCallbackData* callbackData)
+        {
+            TypeInputCallbackData* data = (TypeInputCallbackData*)callbackData->UserData;
+            data->mFilteredTypes->clear();
+            for (auto& pair : *data->mTypes)
+                if (utility::contains(pair.first, data->mSearchFilter, false))
+                    (*data->mFilteredTypes)[pair.first] = pair.second;
+            return 0;
+        }
+
+
         bool TypeMenu::show()
         {
             bool result = false;
 
-            // Filter the available resource types
-            if (ImGui::InputText("Filter", mSearchFilter, sizeof(mSearchFilter)))
+            // Filter the available resource types using input text
+            TypeInputCallbackData data = { &mTypes, &mFilteredTypes, mSearchFilter };
+
+            if (ImGui::InputText("Filter", mSearchFilter, sizeof(mSearchFilter), ImGuiInputTextFlags_CallbackAlways | ImGuiInputTextFlags_EnterReturnsTrue, TypeInputCallBack, &data))
             {
-                mFilteredTypes.clear();
-                for (auto& pair : mTypes)
-                    if (utility::contains(pair.first, mSearchFilter, false))
-                        mFilteredTypes[pair.first] = pair.second;
+                if (mFilteredTypes.size() == 1)
+                {
+                    mSelectedTypeIndex = 0;
+                    mSelectedType = mFilteredTypes.begin()->second;
+                    mSelectedTypeID = mFilteredTypes.begin()->first;
+                    ImGui::CloseCurrentPopup();
+                    result = true;
+                }
             }
             if (mFirstShow)
             {
@@ -54,7 +79,7 @@ namespace nap
                 auto resourceTypePair = showedMap.begin();
                 for (int i = 0; i < showedMap.size(); ++i)
                 {
-                    if (ImGui::Selectable(resourceTypePair->first.c_str(), i == mSelectedTypeIndex))
+                    if (ImGui::Selectable(resourceTypePair->first.c_str()))
                     {
                         mSelectedTypeIndex = i;
                         mSelectedType = resourceTypePair->second;

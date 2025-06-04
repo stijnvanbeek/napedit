@@ -13,7 +13,7 @@ namespace nap
         class ResourceMenu
         {
         public:
-            void init(const std::vector<std::unique_ptr<Resource>>& resources, rtti::TypeInfo* derivedFrom, std::set<rtti::Object*> exclude = { });
+            void init(const std::vector<std::unique_ptr<Resource>>& resources, rtti::TypeInfo* derivedFrom);
             bool show();
             Resource* getSelectedResource() const { return mSelectedResource; }
             const std::string& getSelectedResourceID() const { return mSelectedResourceID; }

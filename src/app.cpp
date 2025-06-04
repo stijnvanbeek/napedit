@@ -45,6 +45,7 @@ namespace nap
     	capFramerate(true);
     	setFramerate(60.f);
     	ImGui::GetIO().FontGlobalScale = 0.9f;
+    	// ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     	// Test
     	TestResource testResource;

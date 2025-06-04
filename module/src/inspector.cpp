@@ -217,7 +217,7 @@ namespace nap
             else if (type.is_derived_from<rtti::ObjectPtrBase>())
             {
                 // Draw resource pointer
-                if (drawPointer(value, type, path, parentPath, valueWidth))
+                if (drawPointer(value, type, path, valueWidth))
                     valueChanged = true;
             }
             else if (!type.is_array() && !type.is_class())
@@ -294,8 +294,7 @@ namespace nap
         }
 
 
-        bool Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path,
-            const rtti::Path& parentPath, float valueWidth)
+        bool Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path, float valueWidth)
         {
             assert(var.get_type().is_wrapper());
             rtti::Object* resource = var.get_value<rtti::ObjectPtr<rtti::Object>>().get();
@@ -319,16 +318,7 @@ namespace nap
             {
                 auto& resources = mModel->getResources();
                 auto wrappedType = type.get_wrapped_type().get_raw_type();
-                std::set<rtti::Object*> exclude;
-                rtti::ResolvedPath resolvedParentPath;
-                if (parentPath.resolve(mInspectedResource, resolvedParentPath))
-                {
-                    auto parent = resolvedParentPath.getValue();
-                    auto parentType = resolvedParentPath.getType();
-                    if (parent.get_type().is_class() && !parent.get_type().is_array())
-                        exclude.emplace(parent.get_value<rtti::ObjectPtr<rtti::Object>>().get());
-                }
-                mResourceMenu.init(resources, &wrappedType, exclude);
+                mResourceMenu.init(resources, &wrappedType);
                 mSelection.set(path, mInspectedResource);
                 mOpenResourceMenu = true;
             }
