@@ -1,6 +1,6 @@
 #pragma once
 
-#include <typemenu.h>
+#include <filteredmenu.h>
 #include <Gui/Gui.h>
 #include <model.h>
 #include <nap/core.h>
@@ -45,7 +45,7 @@ namespace nap
             float mNameColumnOffset = 0.f;
             bool mStartEditing = false;
 
-            TypeMenu mTypeMenu;
+            FilteredMenu mTypeMenu;
             Core& mCore;
         };
 

@@ -7,9 +7,9 @@ namespace nap
     namespace edit
     {
 
-        void FilteredMenu::init(const std::vector<std::string> &items)
+        void FilteredMenu::init(const std::vector<std::string> &&items)
         {
-            mItems.clear();
+            mItems = std::move(items);
             mFilteredItems.clear();
 
             mSelectedItem.clear();
@@ -51,7 +51,7 @@ namespace nap
                 if (mFilteredItems.size() == 1)
                 {
                     mSelectedItemIndex = 0;
-                    mSelectedItem = mFilteredItems.begin();
+                    mSelectedItem = *mFilteredItems.begin();
                     ImGui::CloseCurrentPopup();
                     result = true;
                 }
@@ -79,6 +79,7 @@ namespace nap
                         ImGui::CloseCurrentPopup();
                         result = true;
                     }
+                    item++;
                 }
 
                 if (showedMap.empty())

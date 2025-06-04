@@ -84,7 +84,8 @@ namespace nap
             {
                 if (mResourceMenu.show())
                 {
-                    mSelection.getResolvedPath().getProperty().set_value(mInspectedResource, mResourceMenu.getSelectedResource());
+                    auto resource = mModel->findResource(mResourceMenu.getSelectedItem());
+                    mSelection.getResolvedPath().getProperty().set_value(mInspectedResource, resource);
                 }
                 ImGui::EndPopup();
             }
@@ -318,7 +319,14 @@ namespace nap
             {
                 auto& resources = mModel->getResources();
                 auto wrappedType = type.get_wrapped_type().get_raw_type();
-                mResourceMenu.init(resources, &wrappedType);
+                std::vector<std::string> menuItems;
+                for (auto& resource : resources)
+                {
+                    auto resourceType = resource->get_type().get_raw_type();
+                    if (resourceType.is_derived_from(wrappedType) || resourceType == wrappedType)
+                        menuItems.emplace_back(resource->mID);
+                }
+                mResourceMenu.init(std::move(menuItems));
                 mSelection.set(path, mInspectedResource);
                 mOpenResourceMenu = true;
             }

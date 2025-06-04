@@ -2,7 +2,7 @@
 
 #include <resourcelist.h>
 #include <propertyeditor.h>
-#include <resourcemenu.h>
+#include <filteredmenu.h>
 
   namespace nap
 {
@@ -71,7 +71,7 @@
             std::string mInspectedResourceID;
             Resource* mInspectedResource = nullptr;
             Selection mSelection;
-            ResourceMenu mResourceMenu;
+            FilteredMenu mResourceMenu;
             bool mOpenResourceMenu = false;
 
             std::map<const rtti::TypeInfo, std::unique_ptr<IPropertyEditor>> mPropertyEditors;

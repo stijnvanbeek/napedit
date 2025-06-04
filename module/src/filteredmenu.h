@@ -12,7 +12,7 @@ namespace nap
 
         public:
             FilteredMenu() = default;
-            void init(const std::vector<std::string>& items);
+            void init(const std::vector<std::string>&& items);
             bool show();
             const std::string& getSelectedItem() const { return mSelectedItem; }
 

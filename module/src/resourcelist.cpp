@@ -94,7 +94,11 @@ namespace nap
 					// Create member
 					if (ImGui::Selectable("Create member..."))
 					{
-						mTypeMenu.init(mResourceTypes, &type);
+						std::vector<std::string> menuItems;
+						for (auto& pair : mResourceTypes)
+							if (pair.second->is_derived_from(type))
+								menuItems.push_back(pair.first);
+						mTypeMenu.init(std::move(menuItems));
 						chosenPopup = "##AddResourcePopup";
 					}
 					// Create child
@@ -110,7 +114,10 @@ namespace nap
 				else {
 					if (ImGui::Selectable("Create Resource..."))
 					{
-						mTypeMenu.init(mResourceTypes);
+						std::vector<std::string> menuItems;
+						for (auto& pair : mResourceTypes)
+							menuItems.push_back(pair.first);
+						mTypeMenu.init(std::move(menuItems));
 						chosenPopup = "##AddResourcePopup";
 					}
 					if (ImGui::Selectable("Create Group..."))
@@ -123,7 +130,10 @@ namespace nap
 							mSelectedID.clear();
 						} else
 						{
-							mTypeMenu.init(mGroupTypes);
+							std::vector<std::string> menuItems;
+							for (auto& pair : mGroupTypes)
+								menuItems.push_back(pair.first);
+							mTypeMenu.init(std::move(menuItems));
 							chosenPopup = "##AddGroupPopup";
 						}
 					}
@@ -155,7 +165,9 @@ namespace nap
 			{
 				if (mTypeMenu.show())
 				{
-					auto mID = mModel->createResource(*mTypeMenu.getSelectedType(), mTypeMenu.getSelectedTypeID());
+					auto typeName = mTypeMenu.getSelectedItem();
+					auto type = rtti::TypeInfo::get_by_name(typeName);
+					auto mID = mModel->createResource(type, typeName);
 					if (!mSelectedID.empty())
 						mModel->moveResourceToGroup(mID, mSelectedID);
 					mSelectedID.clear();
@@ -167,7 +179,9 @@ namespace nap
 			{
 				if (mTypeMenu.show())
 				{
-					auto mID = mModel->createGroup(*mTypeMenu.getSelectedType(), mTypeMenu.getSelectedTypeID());
+					auto typeName = mTypeMenu.getSelectedItem();
+					auto type = rtti::TypeInfo::get_by_name(typeName);
+					auto mID = mModel->createGroup(type, typeName);
 					if (!mSelectedID.empty())
 						mModel->moveGroupToParent(mID, mSelectedID);
 					mSelectedID.clear();
