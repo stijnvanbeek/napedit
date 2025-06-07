@@ -14,12 +14,13 @@
             RTTI_ENABLE(Gui)
             
         public:
-            Inspector() = default;
+            Inspector(Core&);
 
             bool init(utility::ErrorState& errorState) override;
 
             ResourcePtr<Model> mModel; ///< Property: 'Model'
             ResourcePtr<ResourceList> mResourceList; ///< Property: 'ResourceListGui'
+            ResourcePtr<LayoutConstants> mLayoutConstants;
 
             template <typename T>
             void registerPropertyEditor()
@@ -40,6 +41,7 @@
                 bool isArrayElement() const { return mIsArrayElement; }
                 bool isArray() const { return mResolvedPath.getType().is_array(); }
                 int getArrayIndex() const { return mArrayIndex; }
+                bool isPointer() const { return mResolvedPath.getType().is_derived_from<rtti::ObjectPtrBase>(); }
                 rtti::ResolvedPath& getResolvedPath() { return mResolvedPath; }
                 const rtti::Path& getPath() const { return mPath; }
 
@@ -62,17 +64,19 @@
             bool drawEnum(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, float valueWidth);
             bool drawPointer(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, float valueWidth);
 
-            void insertArrayElement(Selection& selection);
-            void removeArrayElement(Selection& selection);
-            void moveArrayElementUp(Selection& selection);
-            void moveArrayElementDown(Selection& selection);
-            void addArrayElement(Selection& selection);
+            void insertArrayElement();
+            void removeArrayElement();
+            void moveArrayElementUp();
+            void moveArrayElementDown();
+            void addArrayElement();
+            void choosePointer();
 
             std::string mInspectedResourceID;
             Resource* mInspectedResource = nullptr;
             Selection mSelection;
             FilteredMenu mResourceMenu;
             bool mOpenResourceMenu = false;
+            IMGuiService* mGuiService = nullptr;
 
             std::map<const rtti::TypeInfo, std::unique_ptr<IPropertyEditor>> mPropertyEditors;
         };

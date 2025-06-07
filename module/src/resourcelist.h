@@ -1,11 +1,15 @@
 #pragma once
 
 #include <filteredmenu.h>
+#include <layoutconstants.h>
 #include <Gui/Gui.h>
 #include <model.h>
 #include <nap/core.h>
 
+#include "imguifunctions.h"
+
 #include "imgui_internal.h"
+#include <imguiservice.h>
 
 namespace nap
 {
@@ -20,6 +24,7 @@ namespace nap
             ResourceList(Core& core);
 
             ResourcePtr<Model> mModel; ///< Property: 'Model'
+            ResourcePtr<LayoutConstants> mLayoutConstants;
 
             // Inherited
             bool init(utility::ErrorState& errorState) override;
@@ -47,6 +52,7 @@ namespace nap
 
             FilteredMenu mTypeMenu;
             Core& mCore;
+            IMGuiService* mGuiService = nullptr;
         };
 
 
@@ -58,14 +64,9 @@ namespace nap
                 bool opened = false;
                 if (resource->get_type().template is_derived_from<IGroup>())
                 {
-                    ImGui::SetCursorPosX(nameOffset - 15);
+                    ImGui::SetCursorPosX(nameOffset + mLayoutConstants->treeNodeArrowShift());
                     std::string label = "###" + resource->mID;
-                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
-                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
-                    opened = ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap);
-                    ImGui::PopStyleColor();
-                    ImGui::PopStyleColor();
-
+                    opened = TreeNodeArrow(label.c_str());
                     ImGui::SameLine();
                 }
                 else
@@ -83,13 +84,14 @@ namespace nap
                 if (mEditedID == resource->mID)
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                    ImGui::SetNextItemWidth((ImGui::GetWindowWidth() / 2) - ImGui::GetCursorPosX() - 10);
+                    // ImGui::SetNextItemWidth((ImGui::GetWindowWidth() / 2) - ImGui::GetCursorPosX() - 10 * mGuiService->getScale());
+                    ImGui::SetNextItemWidth(mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX());
                     if (ImGui::InputText("###RenameInput", mRenameBuffer, sizeof(mRenameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
                         mEnteredID = mRenameBuffer;
                     ImGui::PopStyleVar();
                 }
                 else {
-                    if (ImGui::Selectable(resource->mID.c_str(), mSelectedID == resource->mID, ImGuiSelectableFlags_SpanAvailWidth | ImGuiSelectableFlags_AllowItemOverlap) || ImGui::IsItemClicked(1))
+                    if (Selectable(resource->mID.c_str(), mSelectedID == resource->mID, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale()))
                     {
                         mSelectedID = resource->mID;
                         mEditedID.clear();
@@ -111,8 +113,8 @@ namespace nap
                     if (rtti_cast<IGroup>(resource.get()) != nullptr)
                     {
                         auto group = static_cast<ResourceGroup*>(resource.get());
-                        drawTree(group->mMembers, nameOffset + 50);
-                        drawTree(group->mChildren, nameOffset + 50);
+                        drawTree(group->mMembers, nameOffset + mLayoutConstants->nameColumnIndent());
+                        drawTree(group->mChildren, nameOffset + mLayoutConstants->nameColumnIndent());
                     }
                     ImGui::TreePop();
                 }

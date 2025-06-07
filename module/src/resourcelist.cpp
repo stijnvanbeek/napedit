@@ -1,5 +1,6 @@
 #include "resourcelist.h"
 
+#include "imguiservice.h"
 #include "nap/logger.h"
 
 // #include "imgui_internal.h"
@@ -7,6 +8,7 @@
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceList)
 	RTTI_CONSTRUCTOR(nap::Core&)
 	RTTI_PROPERTY("Model", &nap::edit::ResourceList::mModel, nap::rtti::EPropertyMetaData::Required)
+	RTTI_PROPERTY("LayoutConstants", &nap::edit::ResourceList::mLayoutConstants, nap::rtti::EPropertyMetaData::Required)
 RTTI_END_CLASS
 
 namespace nap
@@ -16,6 +18,7 @@ namespace nap
 		ResourceList::ResourceList(Core &core): mCore(core)
 		{
 			memset(mRenameBuffer, 0, sizeof(mRenameBuffer));
+			mGuiService = core.getService<IMGuiService>();
 		}
 
 
@@ -40,33 +43,41 @@ namespace nap
 
 		void ResourceList::draw()
 		{
-			ImGui::SetNextWindowBgAlpha(0.5f);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
 
 			ImGui::BeginColumns("##ResourcesListColumns", 2);
 			mNameColumnOffset = ImGui::GetCursorPosX();
 			ImGui::Text("Name");
 
 			ImGui::NextColumn();
-			mTypeColumnOffset = ImGui::GetCursorPosX() - 30;
+			mTypeColumnOffset = ImGui::GetCursorPosX() + mLayoutConstants->columnContentShift();
 			ImGui::Text("Type");
 			ImGui::EndColumns();
 			ImGui::PopStyleColor();
 
 			// List of all resources
 			ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), true);
-			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + mLayoutConstants->listOffset());
 
+			// Draw resources tree
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 0));
-			drawTree(mModel->getTree().mGroups, mNameColumnOffset);
-			drawTree(mModel->getTree().mResources, mNameColumnOffset);
+			ImGui::SetCursorPosX(mNameColumnOffset + mLayoutConstants->treeNodeArrowShift());
+			bool resourceTreeOpen = TreeNodeArrow("###ResourcesNode");
+			ImGui::SameLine();
+			ImGui::Text("Resources");
+			if (resourceTreeOpen)
+			{
+				drawTree(mModel->getTree().mGroups, mNameColumnOffset + mLayoutConstants->nameColumnIndent());
+				drawTree(mModel->getTree().mResources, mNameColumnOffset + mLayoutConstants->nameColumnIndent());
+				ImGui::TreePop();
+			}
 			ImGui::PopStyleVar();
 
 			ImGui::EndChild();
 
+			// Handle renaming
 			if (!mEditedID.empty() && ImGui::IsMouseClicked(0))
 				mEnteredID = mRenameBuffer;
-
 			if (!mEnteredID.empty())
 			{
 				if (mEnteredID != mSelectedID && mModel->findResource(mEnteredID) == nullptr)

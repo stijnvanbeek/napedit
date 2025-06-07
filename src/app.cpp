@@ -10,6 +10,7 @@
 #include <testresource.h>
 
 #include <parameternumeric.h>
+#include <imgui_internal.h>
 
 namespace nap 
 {    
@@ -44,8 +45,7 @@ namespace nap
 
     	capFramerate(true);
     	setFramerate(60.f);
-    	ImGui::GetIO().FontGlobalScale = 0.9f;
-    	// ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    	// mGuiService->getContext(mRenderWindow)->IO.FontGlobalScale = 0.9;
 
     	// Test
     	TestResource testResource;

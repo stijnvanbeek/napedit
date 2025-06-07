@@ -1,6 +1,11 @@
 {
     "Objects": [
         {
+            "Type": "nap::RenderLayer",
+            "mID": "RenderLayer",
+            "Name": ""
+        },
+        {
             "Type": "nap::RenderWindow",
             "mID": "Window",
             "Borderless": false,
@@ -50,7 +55,7 @@
                         "NoCollapse": true,
                         "AlwaysAutoResize": true,
                         "NoSavedSettings": false,
-                        "MenuBar": false,
+                        "MenuBar": true,
                         "HorizontalScrollBar": false,
                         "CanClose": true
                     },
@@ -65,11 +70,11 @@
                         "Style": "StyleDef",
                         "Position": {
                             "x": 0.0,
-                            "y": 0.0
+                            "y": 25.0
                         },
                         "Size": {
                             "x": 0.0,
-                            "y": 0.0
+                            "y": -25.0
                         },
                         "Flags": {
                             "NoScrollBar": true,
@@ -131,7 +136,7 @@
                                         "y": 0.0
                                     },
                                     "Size": {
-                                        "x": 0.0,
+                                        "x": -3.0,
                                         "y": 0.0
                                     },
                                     "Flags": {
@@ -159,7 +164,8 @@
                     "mID": "ResourceList",
                     "Title": "",
                     "Style": "",
-                    "Model": "Model"
+                    "Model": "Model",
+                    "LayoutConstants": "LayoutConstants"
                 },
                 {
                     "Type": "nap::edit::Inspector",
@@ -167,15 +173,28 @@
                     "Title": "",
                     "Style": "",
                     "Model": "Model",
-                    "ResourceListGui": "ResourceList"
+                    "ResourceListGui": "ResourceList",
+                    "LayoutConstants": "LayoutConstants"
                 },
                 {
                     "Type": "nap::gui::StyleDef",
                     "mID": "StyleDef",
-                    "FloatSettings": [],
+                    "FloatSettings": [
+                        {
+                            "Variable": "ChildBorderSize",
+                            "Value": 1.0
+                        }
+                    ],
                     "SizeSettings": [
                         {
                             "Variable": "FramePadding (size)",
+                            "Value": {
+                                "x": 5.0,
+                                "y": 5.0
+                            }
+                        },
+                        {
+                            "Variable": "WindowPadding (size)",
                             "Value": {
                                 "x": 5.0,
                                 "y": 5.0
@@ -200,9 +219,91 @@
                                 "z": 0.30000001192092896,
                                 "w": 1.0
                             }
+                        },
+                        {
+                            "Variable": "FrameBgHovered",
+                            "Value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0,
+                                "w": 1.0
+                            }
+                        },
+                        {
+                            "Variable": "FrameBgActive",
+                            "Value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0,
+                                "w": 1.0
+                            }
+                        },
+                        {
+                            "Variable": "ButtonHovered",
+                            "Value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0,
+                                "w": 1.0
+                            }
+                        },
+                        {
+                            "Variable": "ButtonActive",
+                            "Value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0,
+                                "w": 1.0
+                            }
+                        },
+                        {
+                            "Variable": "HeaderHovered",
+                            "Value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0,
+                                "w": 1.0
+                            }
+                        },
+                        {
+                            "Variable": "HeaderActive",
+                            "Value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0,
+                                "w": 1.0
+                            }
+                        },
+                        {
+                            "Variable": "TextSelectedBg",
+                            "Value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0,
+                                "w": 1.0
+                            }
+                        },
+                        {
+                            "Variable": "NavHighlight",
+                            "Value": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0,
+                                "w": 1.0
+                            }
                         }
                     ],
                     "FontScaling": 1.0
+                },
+                {
+                    "Type": "nap::edit::LayoutConstants",
+                    "mID": "LayoutConstants",
+                    "ColumnContentShift": -10.0,
+                    "ListOffset": 5.0,
+                    "NameColumnIndent": 25.0,
+                    "TreeNodeArrowShift": -6.0,
+                    "ValueSpacing": 20.0,
+                    "ValueEditorButtonWidth": 15.0
                 }
             ],
             "Children": []

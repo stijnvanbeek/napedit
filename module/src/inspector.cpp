@@ -1,11 +1,14 @@
 #include "inspector.h"
+#include <imguifunctions.h>
 #include <model.h>
 
-#include "testresource.h"
+#include "imguiservice.h"
 
-RTTI_BEGIN_CLASS(nap::edit::Inspector)
+RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::Inspector)
+    RTTI_CONSTRUCTOR(nap::Core&)
     RTTI_PROPERTY("Model", &nap::edit::Inspector::mModel, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("ResourceListGui", &nap::edit::Inspector::mResourceList, nap::rtti::EPropertyMetaData::Required)
+    RTTI_PROPERTY("LayoutConstants", &nap::edit::Inspector::mLayoutConstants, nap::rtti::EPropertyMetaData::Required)
 RTTI_END_CLASS
 
 namespace nap
@@ -13,6 +16,12 @@ namespace nap
 
     namespace edit
     {
+
+        Inspector::Inspector(Core& core) : mSelection()
+        {
+            mGuiService = core.getService<IMGuiService>();
+        }
+
 
         bool Inspector::init(utility::ErrorState &errorState)
         {
@@ -38,11 +47,11 @@ namespace nap
             ImGui::Text("Name");
             ImGui::NextColumn();
 
-            auto valueOffset = ImGui::GetCursorPosX() - 30;
+            auto valueOffset = ImGui::GetCursorPosX() + mLayoutConstants->columnContentShift();
             ImGui::Text("Value");
             ImGui::NextColumn();
 
-            auto typeOffset = ImGui::GetCursorPosX() - 30;
+            auto typeOffset = ImGui::GetCursorPosX() + mLayoutConstants->columnContentShift();
             ImGui::Text("Type");
             ImGui::EndColumns();
             ImGui::PopStyleColor();
@@ -52,7 +61,7 @@ namespace nap
 
             ImGui::SetNextWindowBgAlpha(0.3);
             ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), true);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + mLayoutConstants->listOffset());
 
             // Check if selected resource has changed
             if (mResourceList->getSelectedID() != mInspectedResourceID)
@@ -106,20 +115,20 @@ namespace nap
                     if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
                     {
                         if (ImGui::Selectable("Remove Element"))
-                            removeArrayElement(mSelection);
+                            removeArrayElement();
 
                         if (ImGui::Selectable("Insert Element"))
-                            insertArrayElement(mSelection);
+                            insertArrayElement();
 
                         auto array = mSelection.getResolvedPath().getValue();
                         auto view = array.create_array_view();
                         if (mSelection.getArrayIndex() < view.get_size() - 1)
                             if (ImGui::Selectable("Move Element Down"))
-                                moveArrayElementDown(mSelection);
+                                moveArrayElementDown();
 
                         if (mSelection.getArrayIndex() > 0)
                             if (ImGui::Selectable("Move Element Up"))
-                                moveArrayElementUp(mSelection);
+                                moveArrayElementUp();
 
                         ImGui::EndPopup();
                     }
@@ -129,7 +138,7 @@ namespace nap
                     if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
                     {
                         if (ImGui::Selectable("Add Element"))
-                            addArrayElement(mSelection);
+                            addArrayElement();
 
                         ImGui::EndPopup();
                     }
@@ -167,28 +176,23 @@ namespace nap
 
             bool valueChanged = false;
             bool opened = false;
-            auto valueWidth = typeOffset - valueOffset - 50;
+            auto valueWidth = typeOffset - valueOffset - mLayoutConstants->valueSpacing();
             auto propertyEditor = mPropertyEditors.find(type);
 
             // Draw tree node for objects and arrays
             if (propertyEditor == mPropertyEditors.end() && type.is_class() && !type.is_wrapper())
             {
-                ImGui::SetCursorPosX(nameOffset - 15);
+                ImGui::SetCursorPosX(nameOffset + mLayoutConstants->treeNodeArrowShift());
                 std::string label = "###" + name;
-                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
-                ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
-                opened = ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap);
-                ImGui::PopStyleColor();
-                ImGui::PopStyleColor();
+                opened = TreeNodeArrow(label.c_str());
                 ImGui::SameLine();
             }
             else
                 ImGui::SetCursorPosX(nameOffset);
 
-            // Draw name selectable
+            // Draw name
             bool selected = (mSelection.getPath() == path);
-            if (ImGui::Selectable(name.c_str(), selected, ImGuiSelectableFlags_SpanAvailWidth | ImGuiSelectableFlags_AllowItemOverlap) ||
-                (ImGui::IsItemClicked(1)))
+            if (Selectable(name.c_str(), selected, valueOffset - ImGui::GetCursorPosX() - mLayoutConstants->valueSpacing()))
             {
                 if (isArrayElement)
                     mSelection.set(parentPath, arrayIndex, mInspectedResource);
@@ -240,12 +244,12 @@ namespace nap
                 if (type.is_array())
                 {
                     // Draw array elements
-                    if (drawArray(value, path, name, nameOffset + 50, valueOffset, typeOffset))
+                    if (drawArray(value, path, name, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset))
                         valueChanged = true;
                 }
                 else {
                     // Draw nested object
-                    if (drawObject(value, type, path, nameOffset + 50, valueOffset, typeOffset))
+                    if (drawObject(value, type, path, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset))
                         valueChanged = true;
                 }
                 ImGui::TreePop();
@@ -300,104 +304,105 @@ namespace nap
             assert(var.get_type().is_wrapper());
             rtti::Object* resource = var.get_value<rtti::ObjectPtr<rtti::Object>>().get();
 
-            auto x = ImGui::GetCursorPosX();
-            auto buttonWidth = ImGui::GetFrameHeight();
-            ImGui::SetNextItemWidth(valueWidth - buttonWidth);
 
-            bool selected = (mSelection.getPath() == path);
             std::string label = resource == nullptr ? "Not set" : resource->mID;
-            auto flags = ImGuiSelectableFlags_SpanAvailWidth | ImGuiSelectableFlags_AllowItemOverlap;
-            flags = resource != nullptr ? flags : flags | ImGuiSelectableFlags_Disabled;
-            if (ImGui::Selectable(label.c_str(), selected, flags) ||
-                (ImGui::IsItemClicked(1)))
-                mSelection.set(path, mInspectedResource);
-
+            auto x = ImGui::GetCursorPosX();
+            ImGui::Text(label.c_str());
             ImGui::SameLine();
-            ImGui::SetCursorPosX(x + valueWidth - buttonWidth);
-            ImGui::SetNextItemWidth(buttonWidth + 25);
-            if ((ImGui::IsItemHovered() && ImGui::IsMouseClicked(1)) || ImGui::Button("..."))
+            ImGui::SetCursorPosX(x);
+
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
+            if (ImGui::InvisibleButton(label.c_str(), ImVec2(valueWidth, ImGui::GetItemRectSize().y)) || ImGui::IsItemClicked(1))
             {
-                auto& resources = mModel->getResources();
-                auto wrappedType = type.get_wrapped_type().get_raw_type();
-                std::vector<std::string> menuItems;
-                for (auto& resource : resources)
-                {
-                    auto resourceType = resource->get_type().get_raw_type();
-                    if (resourceType.is_derived_from(wrappedType) || resourceType == wrappedType)
-                        menuItems.emplace_back(resource->mID);
-                }
-                mResourceMenu.init(std::move(menuItems));
                 mSelection.set(path, mInspectedResource);
-                mOpenResourceMenu = true;
+                choosePointer();
             }
+            ImGui::PopStyleVar();
             return false;
         }
 
 
-        void Inspector::insertArrayElement(Selection &selection)
+        void Inspector::insertArrayElement()
         {
-            auto array = selection.getResolvedPath().getValue();
+            auto array = mSelection.getResolvedPath().getValue();
             auto view = array.create_array_view();
             auto elementType = view.get_rank_type(1);
             assert(elementType.can_create_instance());
             auto element = elementType.create();
-            assert(selection.getArrayIndex() <= view.get_size());
-            view.insert_value(selection.getArrayIndex(), element);
-            selection.getResolvedPath().setValue(array);
+            assert(mSelection.getArrayIndex() <= view.get_size());
+            view.insert_value(mSelection.getArrayIndex(), element);
+            mSelection.getResolvedPath().setValue(array);
             auto arrayPath = mSelection.getPath();
             arrayPath.popBack();
-            selection.set(arrayPath, mSelection.getArrayIndex(), mInspectedResource);
+            mSelection.set(arrayPath, mSelection.getArrayIndex(), mInspectedResource);
         }
 
 
-        void Inspector::removeArrayElement(Selection &selection)
+        void Inspector::removeArrayElement()
         {
-            auto array = selection.getResolvedPath().getValue();
+            auto array = mSelection.getResolvedPath().getValue();
             auto view = array.create_array_view();
             assert(array.is_array());
             view.remove_value(mSelection.getArrayIndex());
-            selection.getResolvedPath().setValue(array);
-            selection.clear();
+            mSelection.getResolvedPath().setValue(array);
+            mSelection.clear();
         }
 
 
-        void Inspector::moveArrayElementUp(Selection &selection)
+        void Inspector::moveArrayElementUp()
         {
-            auto array = selection.getResolvedPath().getValue();
+            auto array = mSelection.getResolvedPath().getValue();
             auto view = array.create_array_view();
-            auto element = view.get_value(selection.getArrayIndex());
-            view.remove_value(selection.getArrayIndex());
-            view.insert_value(selection.getArrayIndex() - 1, element);
-            selection.getResolvedPath().setValue(array);
-            auto arrayPath = selection.getPath();
+            auto element = view.get_value(mSelection.getArrayIndex());
+            view.remove_value(mSelection.getArrayIndex());
+            view.insert_value(mSelection.getArrayIndex() - 1, element);
+            mSelection.getResolvedPath().setValue(array);
+            auto arrayPath = mSelection.getPath();
             arrayPath.popBack();
-            selection.set(arrayPath, selection.getArrayIndex() - 1, mInspectedResource);
+            mSelection.set(arrayPath, mSelection.getArrayIndex() - 1, mInspectedResource);
         }
 
 
-        void Inspector::moveArrayElementDown(Selection &selection)
+        void Inspector::moveArrayElementDown()
         {
-            auto array = selection.getResolvedPath().getValue();
+            auto array = mSelection.getResolvedPath().getValue();
             auto view = array.create_array_view();
-            auto element = view.get_value(selection.getArrayIndex());
-            view.remove_value(selection.getArrayIndex());
-            view.insert_value(selection.getArrayIndex() + 1, element);
-            selection.getResolvedPath().setValue(array);
-            auto arrayPath = selection.getPath();
+            auto element = view.get_value(mSelection.getArrayIndex());
+            view.remove_value(mSelection.getArrayIndex());
+            view.insert_value(mSelection.getArrayIndex() + 1, element);
+            mSelection.getResolvedPath().setValue(array);
+            auto arrayPath = mSelection.getPath();
             arrayPath.popBack();
-            selection.set(arrayPath, selection.getArrayIndex() + 1, mInspectedResource);
+            mSelection.set(arrayPath, mSelection.getArrayIndex() + 1, mInspectedResource);
         }
 
 
-        void Inspector::addArrayElement(Selection &selection)
+        void Inspector::addArrayElement()
         {
-            auto array = selection.getResolvedPath().getValue();
+            auto array = mSelection.getResolvedPath().getValue();
             auto view = array.create_array_view();
             auto elementType = view.get_rank_type(1);
             assert(elementType.can_create_instance());
             auto element = elementType.create();
             view.insert_value(view.get_size(), element);
-            selection.getResolvedPath().setValue(array);
+            mSelection.getResolvedPath().setValue(array);
+        }
+
+
+        void Inspector::choosePointer()
+        {
+            auto& resources = mModel->getResources();
+            auto wrappedType = mSelection.getResolvedPath().getType().get_wrapped_type().get_raw_type();
+            std::vector<std::string> menuItems;
+            for (auto& resource : resources)
+            {
+                auto resourceType = resource->get_type().get_raw_type();
+                if (resourceType.is_derived_from(wrappedType) || resourceType == wrappedType)
+                    menuItems.emplace_back(resource->mID);
+            }
+            mResourceMenu.init(std::move(menuItems));
+            mOpenResourceMenu = true;
         }
 
 
