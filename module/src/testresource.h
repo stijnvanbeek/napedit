@@ -30,6 +30,7 @@ namespace nap
         TestEnum mEnum = TestEnum::EEN;
         std::vector<int> mVector = { 1, 2, 3 };
         ResourcePtr<TestResource> mPointer;
+        std::vector<ResourcePtr<TestResource>> mPointerVector;
 
     private:
     };

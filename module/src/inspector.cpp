@@ -94,7 +94,12 @@ namespace nap
                 if (mResourceMenu.show())
                 {
                     auto resource = mModel->findResource(mResourceMenu.getSelectedItem());
-                    mSelection.getResolvedPath().getProperty().set_value(mInspectedResource, resource);
+                    if (mSelection.isPointer())
+                        mSelection.getResolvedPath().setValue(resource);
+                    else if (mSelection.isArrayElement())
+                        insertArrayElement(resource);
+                    else if (mSelection.isArray())
+                        addArrayPtrElement(resource);
                 }
                 ImGui::EndPopup();
             }
@@ -304,7 +309,6 @@ namespace nap
             assert(var.get_type().is_wrapper());
             rtti::Object* resource = var.get_value<rtti::ObjectPtr<rtti::Object>>().get();
 
-
             std::string label = resource == nullptr ? "Not set" : resource->mID;
             auto x = ImGui::GetCursorPosX();
             ImGui::Text(label.c_str());
@@ -316,7 +320,7 @@ namespace nap
             if (ImGui::InvisibleButton(label.c_str(), ImVec2(valueWidth, ImGui::GetItemRectSize().y)) || ImGui::IsItemClicked(1))
             {
                 mSelection.set(path, mInspectedResource);
-                choosePointer();
+                choosePointer(type);
             }
             ImGui::PopStyleVar();
             return false;
@@ -328,14 +332,16 @@ namespace nap
             auto array = mSelection.getResolvedPath().getValue();
             auto view = array.create_array_view();
             auto elementType = view.get_rank_type(1);
-            assert(elementType.can_create_instance());
-            auto element = elementType.create();
-            assert(mSelection.getArrayIndex() <= view.get_size());
-            view.insert_value(mSelection.getArrayIndex(), element);
-            mSelection.getResolvedPath().setValue(array);
-            auto arrayPath = mSelection.getPath();
-            arrayPath.popBack();
-            mSelection.set(arrayPath, mSelection.getArrayIndex(), mInspectedResource);
+            if (elementType.is_derived_from<rtti::ObjectPtrBase>())
+            {
+                choosePointer(elementType);
+            }
+            else
+            {
+                assert(elementType.can_create_instance());
+                auto element = elementType.create();
+                insertArrayElement(element);
+            }
         }
 
 
@@ -383,22 +389,39 @@ namespace nap
             auto array = mSelection.getResolvedPath().getValue();
             auto view = array.create_array_view();
             auto elementType = view.get_rank_type(1);
-            assert(elementType.can_create_instance());
-            auto element = elementType.create();
-            view.insert_value(view.get_size(), element);
+            if (elementType.is_derived_from<rtti::ObjectPtrBase>())
+            {
+                choosePointer(elementType);
+            }
+            else {
+                assert(elementType.can_create_instance());
+                auto element = elementType.create();
+                view.insert_value(view.get_size(), element);
+                mSelection.getResolvedPath().setValue(array);
+            }
+        }
+
+
+        void Inspector::addArrayPtrElement(Resource *resource)
+        {
+            auto array = mSelection.getResolvedPath().getValue();
+            auto view = array.create_array_view();
+            auto elementType = view.get_rank_type(1).get_wrapped_type();
+            assert(resource->get_type().is_derived_from(elementType) || resource->get_type() == elementType);
+            view.insert_value(view.get_size(), resource);
             mSelection.getResolvedPath().setValue(array);
         }
 
 
-        void Inspector::choosePointer()
+        void Inspector::choosePointer(const rtti::TypeInfo& type)
         {
             auto& resources = mModel->getResources();
-            auto wrappedType = mSelection.getResolvedPath().getType().get_wrapped_type().get_raw_type();
+            auto targetType = type.get_wrapped_type().get_raw_type();
             std::vector<std::string> menuItems;
             for (auto& resource : resources)
             {
                 auto resourceType = resource->get_type().get_raw_type();
-                if (resourceType.is_derived_from(wrappedType) || resourceType == wrappedType)
+                if (resourceType.is_derived_from(targetType) || resourceType == targetType)
                     menuItems.emplace_back(resource->mID);
             }
             mResourceMenu.init(std::move(menuItems));

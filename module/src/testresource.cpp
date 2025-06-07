@@ -17,6 +17,7 @@ RTTI_BEGIN_CLASS(nap::TestResource)
     RTTI_PROPERTY("Enum", &nap::TestResource::mEnum, nap::rtti::EPropertyMetaData::Default)
     RTTI_PROPERTY("Vector", &nap::TestResource::mVector, nap::rtti::EPropertyMetaData::Default)
     RTTI_PROPERTY("Pointer", &nap::TestResource::mPointer, nap::rtti::EPropertyMetaData::Default)
+    RTTI_PROPERTY("PointerVector", &nap::TestResource::mPointerVector, nap::rtti::EPropertyMetaData::Default)
 RTTI_END_CLASS
 
 namespace nap

@@ -45,15 +45,8 @@ namespace nap
 
     	capFramerate(true);
     	setFramerate(60.f);
-    	// mGuiService->getContext(mRenderWindow)->IO.FontGlobalScale = 0.9;
 
     	// Test
-    	TestResource testResource;
-    	ResourcePtr<TestResource> testResourcePtr = &testResource;
-    	rtti::Variant var = testResourcePtr;
-    	auto type = var.get_type();
-    	assert(type.is_wrapper());
-    	auto newPtr = var.get_wrapped_value<rtti::Object*>();
 
     	// All done!
         return true;
