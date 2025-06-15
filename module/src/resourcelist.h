@@ -38,8 +38,6 @@ namespace nap
             template <typename T>
             void drawTree(const std::vector<ResourcePtr<T>>& branch, float nameOffset);
 
-            std::map<std::string, const rtti::TypeInfo*> mResourceTypes;
-            std::map<std::string, const rtti::TypeInfo*> mGroupTypes;
             char mRenameBuffer[128];
 
             std::string mSelectedID;
@@ -50,7 +48,10 @@ namespace nap
             float mNameColumnOffset = 0.f;
             bool mStartEditing = false;
 
-            FilteredMenu mTypeMenu;
+            FilteredMenu mFilteredMenu;
+            bool mResourcesNodeSelected = false;
+            bool mEntitiesNodeSelected = false;
+
             Core& mCore;
             IMGuiService* mGuiService = nullptr;
         };
@@ -62,7 +63,7 @@ namespace nap
             for (auto& resource : branch)
             {
                 bool opened = false;
-                if (resource->get_type().template is_derived_from<IGroup>())
+                if (resource->get_type().template is_derived_from<IGroup>() || resource->get_type().template is_derived_from<Entity>())
                 {
                     ImGui::SetCursorPosX(nameOffset + mLayoutConstants->treeNodeArrowShift());
                     std::string label = "###" + resource->mID;
@@ -110,11 +111,19 @@ namespace nap
 
                 if (opened)
                 {
-                    if (rtti_cast<IGroup>(resource.get()) != nullptr)
+                    IGroup* igroup = rtti_cast<IGroup>(resource.get());
+                    if (igroup != nullptr)
                     {
-                        auto group = static_cast<ResourceGroup*>(resource.get());
+                        auto group = static_cast<ResourceGroup*>(igroup);
                         drawTree(group->mMembers, nameOffset + mLayoutConstants->nameColumnIndent());
                         drawTree(group->mChildren, nameOffset + mLayoutConstants->nameColumnIndent());
+                    }
+
+                    Entity* entity = rtti_cast<Entity>(resource.get());
+                    if (entity != nullptr)
+                    {
+                        drawTree(entity->mComponents, nameOffset + mLayoutConstants->nameColumnIndent());
+                        drawTree(entity->mChildren, nameOffset + mLayoutConstants->nameColumnIndent());
                     }
                     ImGui::TreePop();
                 }

@@ -10,6 +10,7 @@ RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::LayoutConstants)
     RTTI_PROPERTY("TreeNodeArrowShift", &nap::edit::LayoutConstants::mTreeNodeArrowShift, nap::rtti::EPropertyMetaData::Default)
     RTTI_PROPERTY("ValueSpacing", &nap::edit::LayoutConstants::mValueSpacing, nap::rtti::EPropertyMetaData::Default)
     RTTI_PROPERTY("ValueEditorButtonWidth", &nap::edit::LayoutConstants::mValueEditorButtonWidth, nap::rtti::EPropertyMetaData::Default)
+    RTTI_PROPERTY("PointerEditorButtonWidth", &nap::edit::LayoutConstants::mPointerEditorButtonWidth, nap::rtti::EPropertyMetaData::Default)
 RTTI_END_CLASS
 
 namespace nap

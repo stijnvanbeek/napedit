@@ -24,19 +24,6 @@ namespace nap
 
 		bool ResourceList::init(utility::ErrorState &errorState)
 		{
-			auto groupBase = RTTI_OF(IGroup);
-			auto allGroups = groupBase.get_derived_classes();
-			for (auto &group: allGroups)
-				if (mCore.getResourceManager()->getFactory().canCreate(group))
-					mGroupTypes[group.get_name().to_string()] = &group;
-
-			auto resourceBase = RTTI_OF(Resource);
-			auto allResources = resourceBase.get_derived_classes();
-			for (auto &resource: allResources)
-				if (mCore.getResourceManager()->getFactory().canCreate(resource))
-					if (mGroupTypes.find(resource.get_name().to_string()) == mGroupTypes.end())
-						mResourceTypes[resource.get_name().to_string()] = &resource;
-
 			return true;
 		}
 
@@ -65,10 +52,25 @@ namespace nap
 			bool resourceTreeOpen = TreeNodeArrow("###ResourcesNode");
 			ImGui::SameLine();
 			ImGui::Text("Resources");
+			// mResourcesNodeSelected = ImGui::Selectable("ResourcesBla", mResourcesNodeSelected, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale());
 			if (resourceTreeOpen)
 			{
 				drawTree(mModel->getTree().mGroups, mNameColumnOffset + mLayoutConstants->nameColumnIndent());
 				drawTree(mModel->getTree().mResources, mNameColumnOffset + mLayoutConstants->nameColumnIndent());
+				ImGui::TreePop();
+			}
+			ImGui::PopStyleVar();
+
+			// Draw entity tree
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 0));
+			ImGui::SetCursorPosX(mNameColumnOffset + mLayoutConstants->treeNodeArrowShift());
+			bool entityTreeOpen = TreeNodeArrow("###EntitiesNode");
+			ImGui::SameLine();
+			ImGui::Text("Entities");
+			// mEntitiesNodeSelected = ImGui::Selectable("EntitiesBla", mEntitiesNodeSelected, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale());
+			if (entityTreeOpen)
+			{
+				drawTree(mModel->getTree().mEntities, mNameColumnOffset + mLayoutConstants->nameColumnIndent());
 				ImGui::TreePop();
 			}
 			ImGui::PopStyleVar();
@@ -95,10 +97,44 @@ namespace nap
 			if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
 			{
 				IGroup *selectedGroup = nullptr;
+				Entity* selectedEntity = nullptr;
 				if (!mSelectedID.empty())
+				{
 					selectedGroup = rtti_cast<IGroup>(mModel->findResource(mSelectedID));
+					selectedEntity = rtti_cast<Entity>(mModel->findResource(mSelectedID));
+				}
 
-				// For groups
+				if (ImGui::Selectable("Create Resource..."))
+				{
+					std::vector<std::string> menuItems;
+					for (auto& pair : mModel->getResourceTypes())
+						menuItems.push_back(pair.first);
+					mFilteredMenu.init(std::move(menuItems));
+					chosenPopup = "##AddResourcePopup";
+				}
+
+				if (ImGui::Selectable("Create Group..."))
+				{
+					auto selectedGroup = rtti_cast<ResourceGroup>(mModel->findResource(mSelectedID));
+					if (selectedGroup != nullptr)
+					{
+						auto type = selectedGroup->get_type();
+						mModel->createGroup(type);
+						mSelectedID.clear();
+					} else
+					{
+						std::vector<std::string> menuItems;
+						for (auto& pair : mModel->getGroupTypes())
+							menuItems.push_back(pair.first);
+						mFilteredMenu.init(std::move(menuItems));
+						chosenPopup = "##AddGroupPopup";
+					}
+				}
+
+				if (ImGui::Selectable("Create Entity..."))
+					mModel->createEntity();
+
+				// When a group is selected
 				if (selectedGroup != nullptr)
 				{
 					auto type = selectedGroup->getMemberType();
@@ -106,10 +142,10 @@ namespace nap
 					if (ImGui::Selectable("Create member..."))
 					{
 						std::vector<std::string> menuItems;
-						for (auto& pair : mResourceTypes)
+						for (auto& pair : mModel->getResourceTypes())
 							if (pair.second->is_derived_from(type))
 								menuItems.push_back(pair.first);
-						mTypeMenu.init(std::move(menuItems));
+						mFilteredMenu.init(std::move(menuItems));
 						chosenPopup = "##AddResourcePopup";
 					}
 					// Create child
@@ -121,36 +157,36 @@ namespace nap
 					}
 				}
 
-				// No group selected
-				else {
-					if (ImGui::Selectable("Create Resource..."))
+				// When an entity is selected
+				else if (selectedEntity != nullptr)
+				{
+					// Create component
+					if (ImGui::Selectable("Create component..."))
 					{
 						std::vector<std::string> menuItems;
-						for (auto& pair : mResourceTypes)
-							menuItems.push_back(pair.first);
-						mTypeMenu.init(std::move(menuItems));
-						chosenPopup = "##AddResourcePopup";
-					}
-					if (ImGui::Selectable("Create Group..."))
-					{
-						auto selectedGroup = rtti_cast<ResourceGroup>(mModel->findResource(mSelectedID));
-						if (selectedGroup != nullptr)
-						{
-							auto type = selectedGroup->get_type();
-							mModel->createGroup(type);
-							mSelectedID.clear();
-						} else
-						{
-							std::vector<std::string> menuItems;
-							for (auto& pair : mGroupTypes)
+						for (auto& pair : mModel->getResourceTypes())
+							if (pair.second->is_derived_from(RTTI_OF(Component)))
 								menuItems.push_back(pair.first);
-							mTypeMenu.init(std::move(menuItems));
-							chosenPopup = "##AddGroupPopup";
+						mFilteredMenu.init(std::move(menuItems));
+						chosenPopup = "##AddComponentPopup";
+					}
+
+					// Add child entity
+					if (ImGui::Selectable("Add child..."))
+					{
+						std::vector<std::string> entities;
+						for (auto& resource : mModel->getResources())
+							if (resource.get() != selectedEntity && resource->get_type() == RTTI_OF(Entity))
+								entities.emplace_back(resource->mID);
+						if (!entities.empty())
+						{
+							mFilteredMenu.init(std::move(entities));
+							chosenPopup = "##AddChildEntityPopup";
 						}
 					}
 				}
 
-				// For selections
+				// For all selections
 				if (!mSelectedID.empty())
 				{
 					if (ImGui::Selectable(std::string("Rename " + mSelectedID).c_str()))
@@ -171,12 +207,13 @@ namespace nap
 			// Popup sub menus
 			if (!chosenPopup.empty())
 				ImGui::OpenPopup(chosenPopup.c_str());
+
 			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopup("##AddResourcePopup"))
 			{
-				if (mTypeMenu.show())
+				if (mFilteredMenu.show())
 				{
-					auto typeName = mTypeMenu.getSelectedItem();
+					auto typeName = mFilteredMenu.getSelectedItem();
 					auto type = rtti::TypeInfo::get_by_name(typeName);
 					auto mID = mModel->createResource(type, typeName);
 					if (!mSelectedID.empty())
@@ -185,12 +222,13 @@ namespace nap
 				}
 				ImGui::EndPopup();
 			}
+
 			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopup("##AddGroupPopup"))
 			{
-				if (mTypeMenu.show())
+				if (mFilteredMenu.show())
 				{
-					auto typeName = mTypeMenu.getSelectedItem();
+					auto typeName = mFilteredMenu.getSelectedItem();
 					auto type = rtti::TypeInfo::get_by_name(typeName);
 					auto mID = mModel->createGroup(type, typeName);
 					if (!mSelectedID.empty())
@@ -199,6 +237,33 @@ namespace nap
 				}
 				ImGui::EndPopup();
 			}
+
+			ImGui::SetNextWindowBgAlpha(0.5f);
+			if (ImGui::BeginPopup("##AddChildEntityPopup"))
+			{
+				if (mFilteredMenu.show())
+				{
+					auto child = mFilteredMenu.getSelectedItem();
+					if (!mSelectedID.empty())
+						mModel->moveEntityToParent(mSelectedID, child);
+					mSelectedID.clear();
+				}
+				ImGui::EndPopup();
+			}
+
+			ImGui::SetNextWindowBgAlpha(0.5f);
+			if (ImGui::BeginPopup("##AddComponentPopup"))
+			{
+				if (mFilteredMenu.show())
+				{
+					auto typeName = mFilteredMenu.getSelectedItem();
+					auto type = rtti::TypeInfo::get_by_name(typeName);
+					auto mID = mModel->createComponent(type, mSelectedID);
+					mSelectedID.clear();
+				}
+				ImGui::EndPopup();
+			}
+
 		}
 	}
 }

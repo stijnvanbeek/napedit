@@ -91,9 +91,32 @@ namespace nap
             ImGui::SetNextWindowBgAlpha(0.5f);
             if (ImGui::BeginPopup("##ChooseResourcePopup"))
             {
-                if (mResourceMenu.show())
+                if (mFilteredMenu.show())
                 {
-                    auto resource = mModel->findResource(mResourceMenu.getSelectedItem());
+                    auto resource = mModel->findResource(mFilteredMenu.getSelectedItem());
+                    if (mSelection.isPointer())
+                        mSelection.getResolvedPath().setValue(resource);
+                    else if (mSelection.isArrayElement())
+                        insertArrayElement(resource);
+                    else if (mSelection.isArray())
+                        addArrayPtrElement(resource);
+                }
+                ImGui::EndPopup();
+            }
+
+            // Popup resource type selection
+            if (mOpenResourceTypeMenu)
+            {
+                ImGui::OpenPopup("##ChooseResourceTypePopup");
+                mOpenResourceTypeMenu = false;
+            }
+            ImGui::SetNextWindowBgAlpha(0.5f);
+            if (ImGui::BeginPopup("##ChooseResourceTypePopup"))
+            {
+                if (mFilteredMenu.show())
+                {
+                    auto resource = mModel->createObject(rtti::TypeInfo::get_by_name(mFilteredMenu.getSelectedItem()));
+                    assert(resource != nullptr);
                     if (mSelection.isPointer())
                         mSelection.getResolvedPath().setValue(resource);
                     else if (mSelection.isArrayElement())
@@ -160,8 +183,9 @@ namespace nap
                 auto propertyValue = property.get_value(object);
                 auto propertyType = property.get_type();
                 auto propertyName = property.get_name().to_string();
+                bool embeddedPointer = rtti::hasFlag(property, nap::rtti::EPropertyMetaData::Embedded);
 
-                if (drawValue(propertyValue, propertyType, path, propertyName, false, 0, nameOffset, valueOffset, typeOffset))
+                if (drawValue(propertyValue, propertyType, path, propertyName, false, 0, embeddedPointer, nameOffset, valueOffset, typeOffset))
                 {
                     property.set_value(object, propertyValue);
                     changed = true;
@@ -171,7 +195,7 @@ namespace nap
         }
 
 
-        bool Inspector::drawValue(rtti::Variant &value, rtti::TypeInfo type, const rtti::Path& parentPath, const std::string &name, bool isArrayElement, int arrayIndex, float nameOffset, float valueOffset, float typeOffset)
+        bool Inspector::drawValue(rtti::Variant &value, rtti::TypeInfo type, const rtti::Path& parentPath, const std::string &name, bool isArrayElement, int arrayIndex, bool isEmbeddedPointer, float nameOffset, float valueOffset, float typeOffset)
         {
             auto path = parentPath;
             if (isArrayElement)
@@ -185,7 +209,9 @@ namespace nap
             auto propertyEditor = mPropertyEditors.find(type);
 
             // Draw tree node for objects and arrays
-            if (propertyEditor == mPropertyEditors.end() && type.is_class() && !type.is_wrapper())
+            bool isCollapsedObject = propertyEditor == mPropertyEditors.end() && type.is_class() && !type.is_wrapper();
+            bool isEmbeddedObject = type.is_derived_from<rtti::ObjectPtrBase>() && isEmbeddedPointer;
+            if (isCollapsedObject || isEmbeddedObject)
             {
                 ImGui::SetCursorPosX(nameOffset + mLayoutConstants->treeNodeArrowShift());
                 std::string label = "###" + name;
@@ -206,17 +232,18 @@ namespace nap
             }
             ImGui::SameLine();
 
-            // Draw property editor
             ImGui::SetCursorPosX(valueOffset);
-            if (propertyEditor != mPropertyEditors.end())
+            if (name == "mID")
             {
+                // Draw mID input field
+                drawID(value, parentPath, valueWidth);
+            }
+            else if (propertyEditor != mPropertyEditors.end())
+            {
+                // Draw property editor
                 std::string label = "###" + name;
                 if (propertyEditor->second->drawValue(value, label, valueWidth))
-                {
                     valueChanged = true;
-                    if (name == "mID")
-                        mResourceList->setSelectedID(value.to_string());
-                }
             }
             else if (type.is_enumeration())
             {
@@ -227,7 +254,7 @@ namespace nap
             else if (type.is_derived_from<rtti::ObjectPtrBase>())
             {
                 // Draw resource pointer
-                if (drawPointer(value, type, path, valueWidth))
+                if (drawPointer(value, type, path, isEmbeddedPointer, valueWidth))
                     valueChanged = true;
             }
             else if (!type.is_array() && !type.is_class())
@@ -249,8 +276,22 @@ namespace nap
                 if (type.is_array())
                 {
                     // Draw array elements
-                    if (drawArray(value, path, name, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset))
+                    if (drawArray(value, path, name, isEmbeddedPointer, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset))
                         valueChanged = true;
+                }
+                else if (isEmbeddedObject)
+                {
+                    // Draw nested embedded pointer object
+                    assert(value.get_type().is_wrapper());
+                    rtti::Object* embeddedObject = value.get_value<rtti::ObjectPtr<rtti::Object>>().get();
+                    if (embeddedObject != nullptr)
+                    {
+                        rtti::Variant var = embeddedObject;
+                        if (drawObject(var, embeddedObject->get_type(), path, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset))
+                        {
+                            valueChanged = true;
+                        }
+                    }
                 }
                 else {
                     // Draw nested object
@@ -263,7 +304,7 @@ namespace nap
         }
 
 
-        bool Inspector::drawArray(rtti::Variant &var, const rtti::Path& path, const std::string &name, float nameOffset, float valueOffset, float typeOffset)
+        bool Inspector::drawArray(rtti::Variant &var, const rtti::Path& path, const std::string &name, bool isEmbeddedPointerArray, float nameOffset, float valueOffset, float typeOffset)
         {
             bool valueChanged = false;
             assert(var.is_array());
@@ -271,7 +312,7 @@ namespace nap
             for (auto i = 0; i < array.get_size(); ++i)
             {
                 auto element = array.get_value(i);
-                if (drawValue(element, element.get_type(), path, std::to_string(i), true, i, nameOffset, valueOffset, typeOffset))
+                if (drawValue(element, element.get_type(), path, std::to_string(i), true, i, isEmbeddedPointerArray, nameOffset, valueOffset, typeOffset))
                 {
                     array.set_value(i, element);
                     valueChanged = true;
@@ -304,7 +345,7 @@ namespace nap
         }
 
 
-        bool Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path, float valueWidth)
+        bool Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path, bool isEmbedded, float valueWidth)
         {
             assert(var.get_type().is_wrapper());
             rtti::Object* resource = var.get_value<rtti::ObjectPtr<rtti::Object>>().get();
@@ -313,17 +354,64 @@ namespace nap
             auto x = ImGui::GetCursorPosX();
             ImGui::Text(label.c_str());
             ImGui::SameLine();
-            ImGui::SetCursorPosX(x);
+            ImGui::SetCursorPosX(x + valueWidth - mLayoutConstants->pointerEditorButtonWidth());
 
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 3);
-            if (ImGui::InvisibleButton(label.c_str(), ImVec2(valueWidth, ImGui::GetItemRectSize().y)) || ImGui::IsItemClicked(1))
+            if (isEmbedded)
             {
-                mSelection.set(path, mInspectedResource);
-                choosePointer(type);
+                if (resource == nullptr)
+                {
+                    if (ImGui::Button("Create", ImVec2(mLayoutConstants->pointerEditorButtonWidth(), 0)))
+                    {
+                        mSelection.set(path, mInspectedResource);
+                        createEmbeddedObject(type);
+                    }
+                }
+                else {
+                    if (ImGui::Button("Remove", ImVec2(mLayoutConstants->pointerEditorButtonWidth(), 0)))
+                    {
+                        mSelection.set(path, mInspectedResource);
+                        mModel->removeEmbeddedObject(resource->mID);
+                        mSelection.getResolvedPath().setValue(nullptr);
+                        // return true;
+                    }
+                }
             }
-            ImGui::PopStyleVar();
+            else
+            {
+                if (resource == nullptr)
+                {
+                    if (ImGui::Button("Set", ImVec2(mLayoutConstants->pointerEditorButtonWidth(), 0)))
+                    {
+                        mSelection.set(path, mInspectedResource);
+                        choosePointer(type);
+                    }
+                }
+                else if (ImGui::Button("Clear", ImVec2(mLayoutConstants->pointerEditorButtonWidth(), 0)))
+                {
+                    mSelection.set(path, mInspectedResource);
+                    mSelection.getResolvedPath().setValue(nullptr);
+                    // return true;
+                }
+
+            }
             return false;
+        }
+
+
+        void Inspector::drawID(rtti::Variant &value, const rtti::Path& parentPath, float width)
+        {
+            auto oldID = value.to_string();
+            std::string label = "###ID";
+            char buffer[128];
+            snprintf(buffer, sizeof(buffer), "%s", oldID.c_str());
+            ImGui::SetNextItemWidth(width);
+            if (ImGui::InputText(label.c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+            {
+                auto newID = std::string(buffer);
+                mModel->renameResource(oldID, newID);
+                if (parentPath.getLength() == 0) // Are we editing the ID of the selected resource?
+                    mResourceList->setSelectedID(value.to_string());
+            }
         }
 
 
@@ -334,7 +422,10 @@ namespace nap
             auto elementType = view.get_rank_type(1);
             if (elementType.is_derived_from<rtti::ObjectPtrBase>())
             {
-                choosePointer(elementType);
+                if (rtti::hasFlag(mSelection.getResolvedPath().getProperty(), rtti::EPropertyMetaData::Embedded))
+                    createEmbeddedObject(elementType);
+                else
+                    choosePointer(elementType);
             }
             else
             {
@@ -391,7 +482,10 @@ namespace nap
             auto elementType = view.get_rank_type(1);
             if (elementType.is_derived_from<rtti::ObjectPtrBase>())
             {
-                choosePointer(elementType);
+                if (rtti::hasFlag(mSelection.getResolvedPath().getProperty(), rtti::EPropertyMetaData::Embedded))
+                    createEmbeddedObject(elementType);
+                else
+                    choosePointer(elementType);
             }
             else {
                 assert(elementType.can_create_instance());
@@ -424,8 +518,20 @@ namespace nap
                 if (resourceType.is_derived_from(targetType) || resourceType == targetType)
                     menuItems.emplace_back(resource->mID);
             }
-            mResourceMenu.init(std::move(menuItems));
+            mFilteredMenu.init(std::move(menuItems));
             mOpenResourceMenu = true;
+        }
+
+
+        void Inspector::createEmbeddedObject(const rtti::TypeInfo &type)
+        {
+            auto targetType = type.get_wrapped_type().get_raw_type();
+            std::vector<std::string> menuItems;
+            for (auto& pair : mModel->getResourceTypes())
+                if (pair.second->is_derived_from(targetType) || *pair.second == targetType)
+                    menuItems.push_back(pair.first);
+            mFilteredMenu.init(std::move(menuItems));
+            mOpenResourceTypeMenu = true;
         }
 
 

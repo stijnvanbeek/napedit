@@ -21,6 +21,7 @@ namespace nap
             float mTreeNodeArrowShift = -15.f;
             float mValueSpacing = 50.f;
             float mValueEditorButtonWidth = 50.f;
+            float mPointerEditorButtonWidth = 50.f;
 
             float columnContentShift() { return mColumnContentShift * mGuiService->getScale(); }
             float listOffset() { return mListOffset * mGuiService->getScale(); }
@@ -28,6 +29,7 @@ namespace nap
             float treeNodeArrowShift() { return mTreeNodeArrowShift * mGuiService->getScale(); }
             float valueSpacing() { return mValueSpacing * mGuiService->getScale(); }
             float valueEditorButtonWidth() { return mValueEditorButtonWidth * mGuiService->getScale(); }
+            float pointerEditorButtonWidth() { return mPointerEditorButtonWidth * mGuiService->getScale(); }
 
         private:
             IMGuiService* mGuiService = nullptr;

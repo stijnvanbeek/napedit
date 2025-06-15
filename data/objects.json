@@ -303,7 +303,8 @@
                     "NameColumnIndent": 25.0,
                     "TreeNodeArrowShift": -6.0,
                     "ValueSpacing": 20.0,
-                    "ValueEditorButtonWidth": 15.0
+                    "ValueEditorButtonWidth": 15.0,
+                    "PointerEditorButtonWidth": 50.0
                 }
             ],
             "Children": []

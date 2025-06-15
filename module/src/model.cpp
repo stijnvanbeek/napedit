@@ -3,6 +3,8 @@
 #include "nap/group.h"
 #include <utility/stringutils.h>
 
+#include "entity.h"
+
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::Model)
     RTTI_CONSTRUCTOR(nap::Core&)
 RTTI_END_CLASS
@@ -18,6 +20,25 @@ namespace nap
             MemberType* getRawMemberPointer(ClassType& instance, MemberType ClassType::*memberPointer)
         {
             return &(instance.*memberPointer);
+        }
+
+
+        bool Model::init(utility::ErrorState &errorState)
+        {
+            auto groupBase = RTTI_OF(IGroup);
+            auto allGroups = groupBase.get_derived_classes();
+            for (auto &group: allGroups)
+                if (mCore.getResourceManager()->getFactory().canCreate(group))
+                    mGroupTypes[group.get_name().to_string()] = &group;
+
+            auto resourceBase = RTTI_OF(Resource);
+            auto allResources = resourceBase.get_derived_classes();
+            for (auto &resource: allResources)
+                if (mCore.getResourceManager()->getFactory().canCreate(resource))
+                    if (mGroupTypes.find(resource.get_name().to_string()) == mGroupTypes.end())
+                        mResourceTypes[resource.get_name().to_string()] = &resource;
+
+            return true;
         }
 
 
@@ -50,25 +71,103 @@ namespace nap
             auto object = mCore.getResourceManager()->getFactory().create(groupType);
             auto group = rtti_cast<IGroup>(object);
             assert(group != nullptr);
+            auto groupPtr = std::unique_ptr<Resource>(group);
 
             // Generate the ID
             auto typeName = groupType.get_name().to_string();
             auto mID = typeName;
             if (!aID.empty())
                 mID = aID;
-            mID = getUniqueID(mID);
 
+            mID = getUniqueID(mID);
             if (!mID.empty())
             {
                 // Add to mResources and to mTree
-                group->mID = mID;
-                auto groupPtr = std::unique_ptr<Resource>(group);
+                groupPtr->mID = mID;
                 mResources.emplace_back(std::move(groupPtr));
                 mTree.mGroups.emplace_back(static_cast<ResourceGroup*>(group));
                 return mID;
             }
 
             return "";
+        }
+
+
+        std::string Model::createEntity(const std::string &aID)
+        {
+            std::string mID = "Entity";
+            if (!aID.empty())
+                mID = aID;
+            mID = getUniqueID(mID);
+            if (mID.empty())
+                return "";
+
+            auto entity = std::make_unique<Entity>();
+            entity->mID = mID;
+            mResources.emplace_back(std::move(entity));
+            mTree.mEntities.emplace_back(dynamic_cast<Entity*>(mResources.back().get()));
+            return mID;
+        }
+
+
+        std::string Model::createComponent(const rttr::type &componentType, const std::string &entityID,
+            const std::string &componentID)
+        {
+            auto entity = findResource<Entity>(entityID);
+            assert(entity != nullptr);
+            auto object = mCore.getResourceManager()->getFactory().create(componentType);
+            auto component = rtti_cast<Component>(object);
+            assert(component != nullptr);
+            auto componentPtr = std::unique_ptr<Component>(component);
+
+            auto typeName = componentType.get_name().to_string();
+            auto mID = typeName;
+            if (!componentID.empty())
+                mID = componentID;
+            mID = getUniqueID(mID);
+            if (!mID.empty())
+            {
+                componentPtr->mID = mID;
+                entity->mComponents.emplace_back(rtti_cast<Component>(componentPtr.get()));
+                mResources.emplace_back(std::move(componentPtr));
+                return mID;
+            }
+            return "";
+        }
+
+
+        Resource* Model::createObject(const rttr::type &type, const std::string &aID)
+        {
+            auto object = mCore.getResourceManager()->getFactory().create(type);
+            auto resource = std::unique_ptr<Resource>(rtti_cast<Resource>(object));
+            assert(resource != nullptr);
+            auto typeName = type.get_name().to_string();
+            auto mID = typeName;
+            if (!aID.empty())
+                mID = aID;
+
+            mID = getUniqueID(mID);
+            if (!mID.empty())
+            {
+                resource->mID = mID;
+                mResources.emplace_back(std::move(resource));
+                return mResources.back().get();
+            }
+            return nullptr;
+        }
+
+
+        void Model::removeEmbeddedObject(const std::string &mID)
+        {
+            auto it = std::find_if(mResources.begin(), mResources.end(), [&mID](const auto& resource) { return resource->mID == mID; });
+            assert(it != mResources.end());
+
+            // Make sure it's not in the tree
+            auto resource = it->get();
+            bool found = eraseFromTree(*resource);
+            assert(!found);
+            // Remove from the owned resources list
+            mResources.erase(it);
         }
 
 
@@ -99,6 +198,20 @@ namespace nap
             }
             else
                 mTree.mGroups.emplace_back(group);
+        }
+
+
+        void Model::moveEntityToParent(const std::string &entityID, const std::string &parentID)
+        {
+            auto entity = findResource<Entity>(entityID);
+            assert(entity != nullptr);
+            auto found = eraseFromTree(*entity);
+            assert(found);
+            auto parent = findResource<Entity>(parentID);
+            if (parent != nullptr)
+            {
+                parent->mChildren.emplace_back(entity);
+            }
         }
 
 
@@ -189,9 +302,32 @@ namespace nap
         }
 
 
+        bool Model::eraseFromTree(std::vector<ResourcePtr<Entity>> &branch, Object &resource)
+        {
+            auto it = std::find(branch.begin(), branch.end(), rtti_cast<Resource>(&resource));
+            if (it != branch.end())
+            {
+                branch.erase(it);
+                return true;
+            }
+            for (auto& element : branch)
+            {
+                if (eraseFromTree(element->mChildren, resource))
+                    return true;
+                auto it = std::find(element->mComponents.begin(), element->mComponents.end(), rtti_cast<Resource>(&resource));
+                if (it != element->mComponents.end())
+                {
+                    element->mComponents.erase(it);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
         bool Model::eraseFromTree(Object &resource)
         {
-            return eraseFromTree(mTree.mResources, resource) || eraseFromTree(mTree.mGroups, resource);
+            return eraseFromTree(mTree.mResources, resource) || eraseFromTree(mTree.mGroups, resource) || eraseFromTree(mTree.mEntities, resource);
         }
 
 

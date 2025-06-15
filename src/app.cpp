@@ -11,29 +11,31 @@
 
 #include <parameternumeric.h>
 #include <imgui_internal.h>
+#include <rtti/jsonwriter.h>
+#include <rtti/jsonreader.h>
 
 namespace nap 
 {    
     bool CoreApp::init(utility::ErrorState& error)
     {
-		// Retrieve services
-		mRenderService	= getCore().getService<nap::RenderService>();
-		mSceneService	= getCore().getService<nap::SceneService>();
-		mInputService	= getCore().getService<nap::InputService>();
-		mGuiService		= getCore().getService<nap::IMGuiService>();
+	    // Retrieve services
+    	mRenderService	= getCore().getService<nap::RenderService>();
+    	mSceneService	= getCore().getService<nap::SceneService>();
+    	mInputService	= getCore().getService<nap::InputService>();
+    	mGuiService		= getCore().getService<nap::IMGuiService>();
 
-		// Fetch the resource manager
-        mResourceManager = getCore().getResourceManager();
+    	// Fetch the resource manager
+    	mResourceManager = getCore().getResourceManager();
 
-		// Get the render window
-		mRenderWindow = mResourceManager->findObject<nap::RenderWindow>("Window");
-		if (!error.check(mRenderWindow != nullptr, "unable to find render window with name: %s", "Window"))
-			return false;
+    	// Get the render window
+    	mRenderWindow = mResourceManager->findObject<nap::RenderWindow>("Window");
+    	if (!error.check(mRenderWindow != nullptr, "unable to find render window with name: %s", "Window"))
+    		return false;
 
-		// Get the scene that contains our entities and components
-		mScene = mResourceManager->findObject<Scene>("Scene");
-		if (!error.check(mScene != nullptr, "unable to find scene with name: %s", "Scene"))
-			return false;
+    	// Get the scene that contains our entities and components
+    	mScene = mResourceManager->findObject<Scene>("Scene");
+    	if (!error.check(mScene != nullptr, "unable to find scene with name: %s", "Scene"))
+    		return false;
 
     	mModel = mResourceManager->findObject<edit::Model>("Model");
     	if (!error.check(mModel != nullptr, "unable to find Model with name: %s", "Scene"))
@@ -47,6 +49,19 @@ namespace nap
     	setFramerate(60.f);
 
     	// Test
+    	TestResource testResource;
+    	TestResource testResource2;
+    	testResource.mID = "test1";
+    	testResource2.mID = "test2";
+    	std::vector<Object*> resources = { &testResource, &testResource2 };
+    	testResource.mPointer = &testResource2;
+    	JSONWriter writer;
+    	if (serializeObjects(resources, writer, error))
+    		utility::writeStringToFile("test.json", writer.GetJSON());
+
+
+    	DeserializeResult deserializer;
+    	deserializeJSONFile("test.json", EPropertyValidationMode::DisallowMissingProperties, EPointerPropertyMode::NoRawPointers, mResourceManager->getFactory(), deserializer, error);
 
     	// All done!
         return true;
