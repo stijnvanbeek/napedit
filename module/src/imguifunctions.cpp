@@ -22,9 +22,18 @@ namespace nap
 		bool Selectable(const char *label, bool selected, float width)
 		{
 			bool result = false;
-			result = ImGui::Selectable(label, selected, ImGuiSelectableFlags_None, ImVec2(width, ImGui::GetItemRectSize().y)) || ImGui::IsItemClicked(1);
+			float height = ImGui::GetFrameHeight();
+			result = ImGui::Selectable(label, selected, ImGuiSelectableFlags_None, ImVec2(width, height)) || ImGui::IsItemClicked(1);
 			return result;
 		}
+
+
+		void Icon(Texture2D &image, IMGuiService *service)
+		{
+			float size = 17.f * service->getScale();
+			ImGui::Image(service->getTextureHandle(image), ImVec2(size, size));
+		}
+
 	}
 
 }

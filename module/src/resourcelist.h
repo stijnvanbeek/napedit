@@ -2,12 +2,11 @@
 
 #include <filteredmenu.h>
 #include <layoutconstants.h>
-#include <Gui/Gui.h>
 #include <model.h>
+#include <Gui/Gui.h>
 #include <nap/core.h>
 
 #include "imguifunctions.h"
-
 #include "imgui_internal.h"
 #include <imguiservice.h>
 
@@ -25,6 +24,11 @@ namespace nap
 
             ResourcePtr<Model> mModel; ///< Property: 'Model'
             ResourcePtr<LayoutConstants> mLayoutConstants;
+
+            ResourcePtr<Texture2D> mEntityIcon;
+            ResourcePtr<Texture2D> mResourceIcon;
+            ResourcePtr<Texture2D> mComponentIcon;
+            ResourcePtr<Texture2D> mGroupIcon;
 
             // Inherited
             bool init(utility::ErrorState& errorState) override;
@@ -72,6 +76,17 @@ namespace nap
                 }
                 else
                     ImGui::SetCursorPosX(nameOffset);
+
+                // draw icon
+                if (resource->get_type() == RTTI_OF(Entity))
+                    Icon(*mEntityIcon, mGuiService);
+                else if (resource->get_type().template is_derived_from<IGroup>())
+                    Icon(*mGroupIcon, mGuiService);
+                else if (resource->get_type().template is_derived_from<Component>())
+                    Icon(*mComponentIcon, mGuiService);
+                else
+                    Icon(*mResourceIcon, mGuiService);
+                ImGui::SameLine();
 
                 if (mSelectedID == resource->mID && mStartEditing)
                 {

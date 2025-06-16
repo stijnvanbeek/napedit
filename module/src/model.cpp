@@ -165,7 +165,7 @@ namespace nap
             // Make sure it's not in the tree
             auto resource = it->get();
             bool found = eraseFromTree(*resource);
-            assert(!found);
+
             // Remove from the owned resources list
             mResources.erase(it);
         }

@@ -62,7 +62,7 @@
             bool drawValue(rtti::Variant& value, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, bool isArrayElement, int arrayIndex, bool isEmbeddedPointer, float nameOffset, float valueOffset, float typeOffset);
             bool drawArray(rtti::Variant& array, const rtti::Path& path, const std::string& name, bool isEmbeddedPointerArray, float nameOffset, float valueOffset, float typeOffset);
             bool drawEnum(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, float valueWidth);
-            bool drawPointer(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, bool isEmbedded, float valueWidth);
+            bool drawPointer(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, bool isEmbedded, float valueWidth);
             void drawID(rtti::Variant& value, const rtti::Path& parentPath, float width);
 
             void insertArrayElement();

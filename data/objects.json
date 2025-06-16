@@ -1,6 +1,17 @@
 {
     "Objects": [
         {
+            "Type": "nap::Entity",
+            "mID": "Entity",
+            "Components": [
+                {
+                    "Type": "nap::CameraComponent",
+                    "mID": "CameraComponent"
+                }
+            ],
+            "Children": []
+        },
+        {
             "Type": "nap::RenderLayer",
             "mID": "RenderLayer",
             "Name": ""
@@ -165,7 +176,11 @@
                     "Title": "",
                     "Style": "",
                     "Model": "Model",
-                    "LayoutConstants": "LayoutConstants"
+                    "LayoutConstants": "LayoutConstants",
+                    "ResourceIcon": "ResourceIcon",
+                    "GroupIcon": "GroupIcon",
+                    "EntityIcon": "EntityIcon",
+                    "ComponentIcon": "ComponentIcon"
                 },
                 {
                     "Type": "nap::edit::Inspector",
@@ -300,14 +315,57 @@
                     "mID": "LayoutConstants",
                     "ColumnContentShift": -10.0,
                     "ListOffset": 5.0,
-                    "NameColumnIndent": 25.0,
+                    "NameColumnIndent": 22.5,
                     "TreeNodeArrowShift": -6.0,
                     "ValueSpacing": 20.0,
                     "ValueEditorButtonWidth": 15.0,
                     "PointerEditorButtonWidth": 50.0
                 }
             ],
-            "Children": []
+            "Children": [
+                {
+                    "Type": "nap::ResourceGroup",
+                    "mID": "Icons",
+                    "Members": [
+                        {
+                            "Type": "nap::ImageFromFile",
+                            "mID": "ResourceIcon",
+                            "Usage": "Static",
+                            "ImagePath": "icons/rttiobject.png",
+                            "GenerateLods": true
+                        },
+                        {
+                            "Type": "nap::ImageFromFile",
+                            "mID": "EntityIcon",
+                            "Usage": "Static",
+                            "ImagePath": "icons/entity.png",
+                            "GenerateLods": true
+                        },
+                        {
+                            "Type": "nap::ImageFromFile",
+                            "mID": "GroupIcon",
+                            "Usage": "Static",
+                            "ImagePath": "icons/group.png",
+                            "GenerateLods": true
+                        },
+                        {
+                            "Type": "nap::ImageFromFile",
+                            "mID": "PropertyIcon",
+                            "Usage": "Static",
+                            "ImagePath": "icons/property.png",
+                            "GenerateLods": true
+                        },
+                        {
+                            "Type": "nap::ImageFromFile",
+                            "mID": "ComponentIcon",
+                            "Usage": "Static",
+                            "ImagePath": "icons/component.png",
+                            "GenerateLods": true
+                        }
+                    ],
+                    "Children": []
+                }
+            ]
         },
         {
             "Type": "nap::Scene",

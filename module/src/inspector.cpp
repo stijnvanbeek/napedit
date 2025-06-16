@@ -42,7 +42,7 @@ namespace nap
         {
             // Draw column headers
             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_TextDisabled));
-            ImGui::BeginColumns("###InspectorColumns", 3);
+            ImGui::BeginColumns("##InspectorColumns", 3);
             auto nameOffset = ImGui::GetCursorPosX();
             ImGui::Text("Name");
             ImGui::NextColumn();
@@ -60,7 +60,7 @@ namespace nap
                 return;
 
             ImGui::SetNextWindowBgAlpha(0.3);
-            ImGui::BeginChild("###InspectorChild", ImVec2(0, 0), true);
+            ImGui::BeginChild("##InspectorChild", ImVec2(0, 0), true);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + mLayoutConstants->listOffset());
 
             // Check if selected resource has changed
@@ -241,7 +241,7 @@ namespace nap
             else if (propertyEditor != mPropertyEditors.end())
             {
                 // Draw property editor
-                std::string label = "###" + name;
+                std::string label = "##" + parentPath.toString() + name;
                 if (propertyEditor->second->drawValue(value, label, valueWidth))
                     valueChanged = true;
             }
@@ -254,7 +254,7 @@ namespace nap
             else if (type.is_derived_from<rtti::ObjectPtrBase>())
             {
                 // Draw resource pointer
-                if (drawPointer(value, type, path, isEmbeddedPointer, valueWidth))
+                if (drawPointer(value, type, path, name, isEmbeddedPointer, valueWidth))
                     valueChanged = true;
             }
             else if (!type.is_array() && !type.is_class())
@@ -328,7 +328,7 @@ namespace nap
             auto enumeration = type.get_enumeration();
             auto names = enumeration.get_names();
             ImGui::SetNextItemWidth(valueWidth);
-            auto label = "###" + name;
+            auto label = "##" + path.toString() + name;
             if (ImGui::BeginCombo(label.c_str(), enumeration.value_to_name(var).to_string().c_str()))
             {
                 for (auto& name : names)
@@ -345,55 +345,61 @@ namespace nap
         }
 
 
-        bool Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path, bool isEmbedded, float valueWidth)
+        bool Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path, const std::string& name, bool isEmbedded, float valueWidth)
         {
             assert(var.get_type().is_wrapper());
             rtti::Object* resource = var.get_value<rtti::ObjectPtr<rtti::Object>>().get();
 
             std::string label = resource == nullptr ? "Not set" : resource->mID;
             auto x = ImGui::GetCursorPosX();
+            ImGui::SetNextItemWidth(valueWidth - mLayoutConstants->pointerEditorButtonWidth());
             ImGui::Text(label.c_str());
             ImGui::SameLine();
             ImGui::SetCursorPosX(x + valueWidth - mLayoutConstants->pointerEditorButtonWidth());
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
             if (isEmbedded)
             {
                 if (resource == nullptr)
                 {
-                    if (ImGui::Button("Create", ImVec2(mLayoutConstants->pointerEditorButtonWidth(), 0)))
+                    label = "Create##" + path.toString() + name;
+                    if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
                         mSelection.set(path, mInspectedResource);
                         createEmbeddedObject(type);
                     }
                 }
                 else {
-                    if (ImGui::Button("Remove", ImVec2(mLayoutConstants->pointerEditorButtonWidth(), 0)))
+                    label = "Remove##" + path.toString() + name;
+                    if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
                         mSelection.set(path, mInspectedResource);
                         mModel->removeEmbeddedObject(resource->mID);
                         mSelection.getResolvedPath().setValue(nullptr);
-                        // return true;
                     }
                 }
             }
-            else
-            {
+            else {
                 if (resource == nullptr)
                 {
-                    if (ImGui::Button("Set", ImVec2(mLayoutConstants->pointerEditorButtonWidth(), 0)))
+                    label = "Set##" + path.toString() + name;
+                    if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
                         mSelection.set(path, mInspectedResource);
                         choosePointer(type);
                     }
                 }
-                else if (ImGui::Button("Clear", ImVec2(mLayoutConstants->pointerEditorButtonWidth(), 0)))
-                {
-                    mSelection.set(path, mInspectedResource);
-                    mSelection.getResolvedPath().setValue(nullptr);
-                    // return true;
+                else {
+                    label = "Clear##" + path.toString() + name;
+                    if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
+                    {
+                        mSelection.set(path, mInspectedResource);
+                        mSelection.getResolvedPath().setValue(nullptr);
+                    }
                 }
-
             }
+
+            ImGui::PopStyleVar();
             return false;
         }
 
@@ -401,7 +407,7 @@ namespace nap
         void Inspector::drawID(rtti::Variant &value, const rtti::Path& parentPath, float width)
         {
             auto oldID = value.to_string();
-            std::string label = "###ID";
+            std::string label = "##ID" + parentPath.toString();
             char buffer[128];
             snprintf(buffer, sizeof(buffer), "%s", oldID.c_str());
             ImGui::SetNextItemWidth(width);

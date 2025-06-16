@@ -3,12 +3,14 @@
 #include "imguiservice.h"
 #include "nap/logger.h"
 
-// #include "imgui_internal.h"
-
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceList)
 	RTTI_CONSTRUCTOR(nap::Core&)
 	RTTI_PROPERTY("Model", &nap::edit::ResourceList::mModel, nap::rtti::EPropertyMetaData::Required)
 	RTTI_PROPERTY("LayoutConstants", &nap::edit::ResourceList::mLayoutConstants, nap::rtti::EPropertyMetaData::Required)
+	RTTI_PROPERTY("ResourceIcon", &nap::edit::ResourceList::mResourceIcon, nap::rtti::EPropertyMetaData::Required)
+	RTTI_PROPERTY("GroupIcon", &nap::edit::ResourceList::mGroupIcon, nap::rtti::EPropertyMetaData::Required)
+	RTTI_PROPERTY("EntityIcon", &nap::edit::ResourceList::mEntityIcon, nap::rtti::EPropertyMetaData::Required)
+	RTTI_PROPERTY("ComponentIcon", &nap::edit::ResourceList::mComponentIcon, nap::rtti::EPropertyMetaData::Required)
 RTTI_END_CLASS
 
 namespace nap
@@ -51,8 +53,14 @@ namespace nap
 			ImGui::SetCursorPosX(mNameColumnOffset + mLayoutConstants->treeNodeArrowShift());
 			bool resourceTreeOpen = TreeNodeArrow("###ResourcesNode");
 			ImGui::SameLine();
-			ImGui::Text("Resources");
-			// mResourcesNodeSelected = ImGui::Selectable("ResourcesBla", mResourcesNodeSelected, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale());
+			Icon(*mResourceIcon, mGuiService);
+			ImGui::SameLine();
+			if (Selectable("Resources##Selectable", mResourcesNodeSelected, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale()))
+			{
+				mResourcesNodeSelected = true;
+				mEntitiesNodeSelected = false;
+				mSelectedID.clear();
+			}
 			if (resourceTreeOpen)
 			{
 				drawTree(mModel->getTree().mGroups, mNameColumnOffset + mLayoutConstants->nameColumnIndent());
@@ -64,16 +72,28 @@ namespace nap
 			// Draw entity tree
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 0));
 			ImGui::SetCursorPosX(mNameColumnOffset + mLayoutConstants->treeNodeArrowShift());
-			bool entityTreeOpen = TreeNodeArrow("###EntitiesNode");
+			bool entityTreeOpen = TreeNodeArrow("##EntitiesNode");
 			ImGui::SameLine();
-			ImGui::Text("Entities");
-			// mEntitiesNodeSelected = ImGui::Selectable("EntitiesBla", mEntitiesNodeSelected, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale());
+			Icon(*mEntityIcon, mGuiService);
+			ImGui::SameLine();
+			if (Selectable("Entities##Selectable", mEntitiesNodeSelected, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale()))
+			{
+				mEntitiesNodeSelected = true;
+				mResourcesNodeSelected = false;
+				mSelectedID.clear();
+			}
 			if (entityTreeOpen)
 			{
 				drawTree(mModel->getTree().mEntities, mNameColumnOffset + mLayoutConstants->nameColumnIndent());
 				ImGui::TreePop();
 			}
 			ImGui::PopStyleVar();
+
+			if (!mSelectedID.empty())
+			{
+				mEntitiesNodeSelected = false;
+				mResourcesNodeSelected = false;
+			}
 
 			ImGui::EndChild();
 
@@ -91,7 +111,7 @@ namespace nap
 				mEditedID.clear();
 			}
 
-			// Popup when right clicked on the resources list
+			// Popup context menu on right click
 			std::string chosenPopup;
 			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
@@ -104,41 +124,55 @@ namespace nap
 					selectedEntity = rtti_cast<Entity>(mModel->findResource(mSelectedID));
 				}
 
-				if (ImGui::Selectable("Create Resource..."))
+				if (mResourcesNodeSelected)
 				{
-					std::vector<std::string> menuItems;
-					for (auto& pair : mModel->getResourceTypes())
-						menuItems.push_back(pair.first);
-					mFilteredMenu.init(std::move(menuItems));
-					chosenPopup = "##AddResourcePopup";
-				}
-
-				if (ImGui::Selectable("Create Group..."))
-				{
-					auto selectedGroup = rtti_cast<ResourceGroup>(mModel->findResource(mSelectedID));
-					if (selectedGroup != nullptr)
-					{
-						auto type = selectedGroup->get_type();
-						mModel->createGroup(type);
-						mSelectedID.clear();
-					} else
+					Icon(*mResourceIcon, mGuiService);
+					ImGui::SameLine();
+					if (ImGui::Selectable("Create Resource..."))
 					{
 						std::vector<std::string> menuItems;
-						for (auto& pair : mModel->getGroupTypes())
+						for (auto& pair : mModel->getResourceTypes())
 							menuItems.push_back(pair.first);
 						mFilteredMenu.init(std::move(menuItems));
-						chosenPopup = "##AddGroupPopup";
+						chosenPopup = "##AddResourcePopup";
+					}
+
+					Icon(*mGroupIcon, mGuiService);
+					ImGui::SameLine();
+					if (ImGui::Selectable("Create Group..."))
+					{
+						auto selectedGroup = rtti_cast<ResourceGroup>(mModel->findResource(mSelectedID));
+						if (selectedGroup != nullptr)
+						{
+							auto type = selectedGroup->get_type();
+							mModel->createGroup(type);
+							mSelectedID.clear();
+						} else
+						{
+							std::vector<std::string> menuItems;
+							for (auto& pair : mModel->getGroupTypes())
+								menuItems.push_back(pair.first);
+							mFilteredMenu.init(std::move(menuItems));
+							chosenPopup = "##AddGroupPopup";
+						}
 					}
 				}
 
-				if (ImGui::Selectable("Create Entity..."))
-					mModel->createEntity();
+				if (mEntitiesNodeSelected)
+				{
+					Icon(*mEntityIcon, mGuiService);
+					ImGui::SameLine();
+					if (ImGui::Selectable("Create Entity..."))
+						mModel->createEntity();
+				}
 
 				// When a group is selected
 				if (selectedGroup != nullptr)
 				{
 					auto type = selectedGroup->getMemberType();
 					// Create member
+					Icon(*mResourceIcon, mGuiService);
+					ImGui::SameLine();
 					if (ImGui::Selectable("Create member..."))
 					{
 						std::vector<std::string> menuItems;
@@ -149,6 +183,8 @@ namespace nap
 						chosenPopup = "##AddResourcePopup";
 					}
 					// Create child
+					Icon(*mGroupIcon, mGuiService);
+					ImGui::SameLine();
 					if (ImGui::Selectable("Create child..."))
 					{
 						auto mID = mModel->createGroup(selectedGroup->get_type());
@@ -161,6 +197,8 @@ namespace nap
 				else if (selectedEntity != nullptr)
 				{
 					// Create component
+					Icon(*mComponentIcon, mGuiService);
+					ImGui::SameLine();
 					if (ImGui::Selectable("Create component..."))
 					{
 						std::vector<std::string> menuItems;
@@ -172,6 +210,8 @@ namespace nap
 					}
 
 					// Add child entity
+					Icon(*mEntityIcon, mGuiService);
+					ImGui::SameLine();
 					if (ImGui::Selectable("Add child..."))
 					{
 						std::vector<std::string> entities;
