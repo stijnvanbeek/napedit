@@ -124,6 +124,7 @@ namespace nap
 					selectedEntity = rtti_cast<Entity>(mModel->findResource(mSelectedID));
 				}
 
+				// When a resource is selected
 				if (mResourcesNodeSelected)
 				{
 					Icon(*mResourceIcon, mGuiService);
@@ -158,6 +159,7 @@ namespace nap
 					}
 				}
 
+				// When the main entities node is selected
 				if (mEntitiesNodeSelected)
 				{
 					Icon(*mEntityIcon, mGuiService);

@@ -4,7 +4,8 @@ RTTI_DEFINE_CLASS(nap::edit::PropertyEditorString)
 RTTI_DEFINE_CLASS(nap::edit::PropertyEditorBool)
 RTTI_DEFINE_CLASS(nap::edit::PropertyEditorFloat)
 RTTI_DEFINE_CLASS(nap::edit::PropertyEditorDouble)
-RTTI_DEFINE_CLASS(nap::edit::PropertyEditorInt)
+RTTI_DEFINE_CLASS(nap::edit::PropertyEditorInt<int>)
+RTTI_DEFINE_CLASS(nap::edit::PropertyEditorInt<uint>)
 RTTI_DEFINE_CLASS(nap::edit::PropertyEditorVec2)
 RTTI_DEFINE_CLASS(nap::edit::PropertyEditorVec3)
 RTTI_DEFINE_CLASS(nap::edit::PropertyEditorVec4)
@@ -62,19 +63,6 @@ namespace nap
             double value = var.to_double();
             ImGui::SetNextItemWidth(width);
             if (ImGui::InputDouble(label.c_str(), &value, 0.f, 0.f, "%.3f"))
-            {
-                var = value;
-                return true;
-            }
-            return false;
-        }
-
-
-        bool PropertyEditorInt::drawValue(rtti::Variant& var, const std::string& label, float width)
-        {
-            int value = var.to_int();
-            ImGui::SetNextItemWidth(width);
-            if (ImGui::InputInt(label.c_str(), &value, 1, 1))
             {
                 var = value;
                 return true;

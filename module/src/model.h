@@ -11,12 +11,22 @@ namespace nap
 
     namespace edit
     {
-
+        /**
+         * Data model that is being edited.
+         * All resources are owned in a flat list.
+         * All resources are also kept in a tree structure.
+         */
         class NAPAPI Model : public Resource
         {
             RTTI_ENABLE(Resource)
 
         public:
+            /**
+             * The tree consists of three lists:
+             * - mResources: Resources that are not part of a group.
+             * - mGroups: Groups that contain resources and subgroups
+             * - mEntities: Entities that contain components and child entities.
+             */
             struct Tree
             {
                 std::vector<ResourcePtr<Resource>> mResources;

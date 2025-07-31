@@ -14,7 +14,11 @@ namespace nap
 {
     namespace edit
     {
-    
+        /**
+         * GUI that presents the list of resources kept in the Model for editing.
+         * The resources are presented in a tree view that reflects the tree structure administered by the Model.
+         * The ResourceList allows for adding, removing and renaming resources in the tree.
+         */
         class NAPAPI ResourceList : public gui::Gui
         {
             RTTI_ENABLE(Gui)
@@ -22,37 +26,54 @@ namespace nap
         public:
             ResourceList(Core& core);
 
-            ResourcePtr<Model> mModel; ///< Property: 'Model'
-            ResourcePtr<LayoutConstants> mLayoutConstants;
+            ResourcePtr<Model> mModel; ///< Property: 'Model' Link to the data model where the edited resource lives.
+            ResourcePtr<LayoutConstants> mLayoutConstants; ///< Property: 'LayoutConstants' Link to a set of values used to layout the gui.
 
-            ResourcePtr<Texture2D> mEntityIcon;
-            ResourcePtr<Texture2D> mResourceIcon;
-            ResourcePtr<Texture2D> mComponentIcon;
-            ResourcePtr<Texture2D> mGroupIcon;
+            ResourcePtr<Texture2D> mEntityIcon; ///< Property: 'EntityIcon' Icon showed at the entity main tree node.
+            ResourcePtr<Texture2D> mResourceIcon; ///< Property: 'ResourceIcon' Icon showed at resource tree nodes.
+            ResourcePtr<Texture2D> mComponentIcon; ///< Property: 'ComponentIcon' Icon showed at component tree nodes.
+            ResourcePtr<Texture2D> mGroupIcon; ///< Property: 'GroupIcon' Icon showed at group tree nodes.
 
             // Inherited
             bool init(utility::ErrorState& errorState) override;
 
+            /**
+             * Selects a resource in the list
+             * @param id mID of the resource to select.
+             */
             void setSelectedID(const std::string& id) { mSelectedID = id; }
+
+            /**
+             * @return mID of the selected resource from the Model.
+             */
             const std::string& getSelectedID() const { return mSelectedID; }
 
         private:
+            // Inherited from Gui
             void draw() override;
 
+            /**
+             * Draws a tree branch of the resource tree.
+             * This function is called recursively to draw sub branches.
+             * @tparam T Type of the resources in the branch.
+             * @param branch Vector of resources in the branch.
+             * @param nameOffset Horizontal offset of the name column of the current (sub) branch. This offset increases with the depth within the tree.
+             */
             template <typename T>
             void drawTree(const std::vector<ResourcePtr<T>>& branch, float nameOffset);
 
-            char mRenameBuffer[128];
+            char mRenameBuffer[128]; // Buffer for renaming a resource.
 
-            std::string mSelectedID;
-            std::string mEditedID;
-            std::string mEnteredID;
+            std::string mSelectedID; // mID of the selected resource.
+            std::string mEditedID; // mID of the resource that is being renamed.
+            std::string mEnteredID; // New mID that has been entered for the mID that is being renamed (stored in mEditedID)
 
-            float mTypeColumnOffset = 0.f;
-            float mNameColumnOffset = 0.f;
+            float mTypeColumnOffset = 0.f; // Horizontal offset of the type column.
+            float mNameColumnOffset = 0.f; // Horizontal offset of the name column.
+
+            FilteredMenu mFilteredMenu; // Menu used to select the type of a resource to create.
+
             bool mStartEditing = false;
-
-            FilteredMenu mFilteredMenu;
             bool mResourcesNodeSelected = false;
             bool mEntitiesNodeSelected = false;
 
@@ -67,6 +88,7 @@ namespace nap
             for (auto& resource : branch)
             {
                 bool opened = false;
+                // For groups or entities draw the tree node arrow.
                 if (resource->get_type().template is_derived_from<IGroup>() || resource->get_type().template is_derived_from<Entity>())
                 {
                     ImGui::SetCursorPosX(nameOffset + mLayoutConstants->treeNodeArrowShift());
@@ -88,6 +110,7 @@ namespace nap
                     Icon(*mResourceIcon, mGuiService);
                 ImGui::SameLine();
 
+                // If this node resource is selected and the user is renaming it, then the input field is focused.
                 if (mSelectedID == resource->mID && mStartEditing)
                 {
                     mEditedID = resource->mID;
@@ -97,6 +120,7 @@ namespace nap
                     ImGui::SetKeyboardFocusHere();
                 }
 
+                // If this resource is being renamed, draw the text input field.
                 if (mEditedID == resource->mID)
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -106,17 +130,21 @@ namespace nap
                         mEnteredID = mRenameBuffer;
                     ImGui::PopStyleVar();
                 }
+
+                // If not being renamed, draw the text label.
                 else {
                     if (Selectable(resource->mID.c_str(), mSelectedID == resource->mID, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale()))
                     {
                         mSelectedID = resource->mID;
                         mEditedID.clear();
                     }
+                    // Check if the user double clicked on the resource name.
                     if (ImGui::IsItemHovered())
                         if (ImGui::IsMouseDoubleClicked(0))
                             mStartEditing = true;
                 }
 
+                // Draw the type name
                 auto type = resource->get_type();
                 ImGui::SameLine();
                 ImGui::SetCursorPosX(mTypeColumnOffset);
@@ -124,6 +152,7 @@ namespace nap
                 ImGui::Text(type.get_name().to_string().c_str());
                 ImGui::PopStyleColor();
 
+                // If the tree node is opened, draw the sub tree.
                 if (opened)
                 {
                     IGroup* igroup = rtti_cast<IGroup>(resource.get());

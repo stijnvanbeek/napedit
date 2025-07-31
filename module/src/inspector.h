@@ -8,7 +8,9 @@
 {
     namespace edit
     {
-    
+        /**
+         * Inspector Gui for editing properties of a resource.
+         */
         class Inspector : public gui::Gui
         {
             RTTI_ENABLE(Gui)
@@ -18,10 +20,14 @@
 
             bool init(utility::ErrorState& errorState) override;
 
-            ResourcePtr<Model> mModel; ///< Property: 'Model'
-            ResourcePtr<ResourceList> mResourceList; ///< Property: 'ResourceListGui'
-            ResourcePtr<LayoutConstants> mLayoutConstants;
+            ResourcePtr<Model> mModel; ///< Property: 'Model' Link to the data model where the edited resource lives.
+            ResourcePtr<ResourceList> mResourceList; ///< Property: 'ResourceListGui' Link to the resource list gui. The selected Resource in the ResourceList will be edited.
+            ResourcePtr<LayoutConstants> mLayoutConstants; ///< Property: 'LayoutConstants' Link to a set of values used to layout the gui.
 
+            /**
+             * Register a property editor for a custom type.
+             * @tparam T The type of the property editor.
+             */
             template <typename T>
             void registerPropertyEditor()
             {

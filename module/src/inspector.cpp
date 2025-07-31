@@ -26,12 +26,12 @@ namespace nap
         bool Inspector::init(utility::ErrorState &errorState)
         {
             // Scope for linked property editors
-            auto allPropertyEditors = RTTI_OF(IPropertyEditor).get_derived_classes();
-            for (auto& type : allPropertyEditors)
-                if (type.can_create_instance())
+            auto editorTypes = RTTI_OF(IPropertyEditor).get_derived_classes();
+            for (auto& editorType : editorTypes)
+                if (editorType.can_create_instance())
                 {
-                    auto instance = type.create<IPropertyEditor>();
-                    mPropertyEditors[instance->getType()] = std::unique_ptr<IPropertyEditor>(instance);
+                    auto editor = editorType.create<IPropertyEditor>();
+                    mPropertyEditors[editor->getType()] = std::unique_ptr<IPropertyEditor>(editor);
                 }
 
             return true;
