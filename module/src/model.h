@@ -38,25 +38,109 @@ namespace nap
 
             bool init(utility::ErrorState &errorState) override;
 
+            /**
+             * Create a new resource
+             * @param resourceType Type of the new resource. Needs to be a Resource subclass.
+             * @param mID Suggestion for the resource's id. If left empty the type name will be used. If either is already in use a unique id will be generated from it using a number postfix.
+             * @return The mID used for the new resource.
+             */
             std::string createResource(const rttr::type& resourceType, const std::string& mID = "");
+
+            /**
+             * Create a new group.
+             * @param groupType Type of the new group. Needs to be a IGroup subclass.
+             * @param groupID Suggestion for the group's id. If left empty the type name will be used. If either is already in use a unique id will be generated from it using a number postfix.
+             * @return The mID used for the new group.
+             */
             std::string createGroup(const rttr::type& groupType, const std::string& groupID = "");
+
+            /**
+             * Create new entity.
+             * @param id suggestion for the entity's id. If left empty the type name will be used. If either is already in use a unique id will be generated from it using a number postfix.
+             * @return The mID used for the new entity.
+             */
             std::string createEntity(const std::string& id = "");
+
+            /**
+             * Create new component.
+             * @param componentType new component type
+             * @param entityID mID of the entity containing the component.
+             * @param componentID suggestion for the component's id. If left empty the type name will be used. If either is already in use a unique id will be generated from it using a number postfix.
+             * @return The mID used for the new component.
+             */
             std::string createComponent(const rttr::type& componentType, const std::string& entityID, const std::string& componentID = "");
-            Resource* createObject(const rttr::type& type, const std::string& mID = ""); // Creates object without adding it to the tree
-            void removeEmbeddedObject(const std::string& mID = ""); // Removes without deleting from the tree
+
+            /**
+             * Create a resource without adding it to the tree. Used for creating embedded objects.
+             * @param type Resource type
+             * @param mID suggestion for the resource's id. If left empty the type name will be used. If either is already in use a unique id will be generated from it using a number postfix.
+             * @return The mID used for the new resource.
+             */
+            Resource* createEmbeddedObject(const rttr::type& type, const std::string& mID = "");
+
+            /**
+             * Remove object without that is not present in the tree. Used for deleting embedded objects.
+             * @param mID Id of the object to be deleted.
+             */
+            void removeEmbeddedObject(const std::string& mID = "");
+
             void moveResourceToGroup(const std::string& mID, const std::string& groupID);
             void moveGroupToParent(const std::string& groupID, const std::string& parentGroupID);
             void moveEntityToParent(const std::string& entityID, const std::string& parentID);
+
+            /**
+             * Remove a resource, also deletes it from the tree.
+             * @param mID Id of the resource to remove.
+             */
             void removeResource(const std::string& mID);
+
+            /**
+             * Rename a resource.
+             * @param mID Current name.
+             * @param newName New name.
+             */
             void renameResource(const std::string& mID, const std::string& newName);
+
+            /**
+             * @return All objects in the model as a flat list.
+             */
             const std::vector<std::unique_ptr<Resource>>& getResources() const { return mResources; }
 
+            /**
+             * Find a resource by mID and type
+             * @tparam T Type of the resource to find.
+             * @param mID mID of the resource to find
+             * @return Nullptr if no resource is found of the given type and name.
+             */
             template <typename T> T* findResource(const std::string& mID);
+
+            /**
+             * Find resource by mID
+             * @param mID mID ofn the resource to find.
+             * @return Nullptr if no resource is found with this name.
+             */
             Resource* findResource(const std::string& mID);
+
+            /**
+             * Find resource group by mID.
+             * @param mID mID of the group
+             * @return nullptr if no group is found with this mID.
+             */
             ResourceGroup* findGroup(const std::string& mID);
+
+            /**
+             * @return Tree representation of all objects in the model.
+             */
             Tree& getTree() { return mTree; }
 
+            /**
+             * @return All registered resource types, meaning types derived from Resource.
+             */
             const std::map<std::string, const rtti::TypeInfo*>& getResourceTypes() const { return mResourceTypes; }
+
+            /**
+             * @return All registered group types, derived from IGroup.
+             */
             const std::map<std::string, const rtti::TypeInfo*>& getGroupTypes() const { return mGroupTypes; }
 
         private:

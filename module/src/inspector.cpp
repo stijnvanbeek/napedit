@@ -115,7 +115,7 @@ namespace nap
             {
                 if (mFilteredMenu.show())
                 {
-                    auto resource = mModel->createObject(rtti::TypeInfo::get_by_name(mFilteredMenu.getSelectedItem()));
+                    auto resource = mModel->createEmbeddedObject(rtti::TypeInfo::get_by_name(mFilteredMenu.getSelectedItem()));
                     assert(resource != nullptr);
                     if (mSelection.isPointer())
                         mSelection.getResolvedPath().setValue(resource);

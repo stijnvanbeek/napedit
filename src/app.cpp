@@ -59,7 +59,6 @@ namespace nap
     	if (serializeObjects(resources, writer, error))
     		utility::writeStringToFile("test.json", writer.GetJSON());
 
-
     	DeserializeResult deserializer;
     	deserializeJSONFile("test.json", EPropertyValidationMode::DisallowMissingProperties, EPointerPropertyMode::NoRawPointers, mResourceManager->getFactory(), deserializer, error);
 

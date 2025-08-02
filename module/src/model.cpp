@@ -136,7 +136,7 @@ namespace nap
         }
 
 
-        Resource* Model::createObject(const rttr::type &type, const std::string &aID)
+        Resource* Model::createEmbeddedObject(const rttr::type &type, const std::string &aID)
         {
             auto object = mCore.getResourceManager()->getFactory().create(type);
             auto resource = std::unique_ptr<Resource>(rtti_cast<Resource>(object));
@@ -165,6 +165,7 @@ namespace nap
             // Make sure it's not in the tree
             auto resource = it->get();
             bool found = eraseFromTree(*resource);
+            assert(found == false);
 
             // Remove from the owned resources list
             mResources.erase(it);

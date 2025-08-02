@@ -1,4 +1,4 @@
-  #pragma once
+#pragma once
 
 #include <resourcelist.h>
 #include <propertyeditor.h>
