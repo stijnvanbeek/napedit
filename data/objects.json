@@ -168,7 +168,8 @@
                                 }
                             ]
                         }
-                    }
+                    },
+                    "MenuBar": "MainMenuBar"
                 },
                 {
                     "Type": "nap::edit::ResourceList",
@@ -320,6 +321,45 @@
                     "ValueSpacing": 20.0,
                     "ValueEditorButtonWidth": 15.0,
                     "PointerEditorButtonWidth": 50.0
+                },
+                {
+                    "Type": "nap::gui::MenuBar",
+                    "mID": "MainMenuBar",
+                    "Title": "",
+                    "Style": "",
+                    "Menus": [
+                        {
+                            "Type": "nap::gui::Menu",
+                            "mID": "menuFile",
+                            "Title": "File",
+                            "Items": [
+                                {
+                                    "Type": "nap::gui::MenuItem",
+                                    "mID": "menuNew",
+                                    "Title": "New",
+                                    "Action": ""
+                                },
+                                {
+                                    "Type": "nap::gui::MenuItem",
+                                    "mID": "menuOpen",
+                                    "Title": "Open",
+                                    "Action": ""
+                                },
+                                {
+                                    "Type": "nap::gui::MenuItem",
+                                    "mID": "menuClose",
+                                    "Title": "Close",
+                                    "Action": ""
+                                },
+                                {
+                                    "Type": "nap::gui::MenuItem",
+                                    "mID": "menuQuit",
+                                    "Title": "Quit",
+                                    "Action": ""
+                                }
+                            ]
+                        }
+                    ]
                 }
             ],
             "Children": [
