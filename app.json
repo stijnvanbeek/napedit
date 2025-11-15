@@ -3,11 +3,12 @@
     "mID": "ProjectInfo",
     "Title": "napkin2",
     "Version": "1.0.0",
+    "Data": "data/objects.json",
+    "PathMapping": "cache/path_mapping.json",
+    "ServiceConfig": "config.json",
     "RequiredModules": [
         "napnapkin2",
-        "napapp"
-    ],
-    "Data": "data/objects.json",
-    "ServiceConfig": "",
-    "PathMapping": "cache/path_mapping.json"
+        "napapp",
+        "napnativefiledialog"
+    ]
 }

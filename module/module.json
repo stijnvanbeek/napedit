@@ -5,7 +5,7 @@
         "naprender",
         "napscene",
         "napgui",
-        "napaudioadvanced"
+        "napnativefiledialog"
     ],
     "WindowsDllSearchPaths": []
 }

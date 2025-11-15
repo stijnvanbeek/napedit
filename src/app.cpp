@@ -9,7 +9,6 @@
 
 #include <testresource.h>
 
-#include <parameternumeric.h>
 #include <imgui_internal.h>
 #include <rtti/jsonwriter.h>
 #include <rtti/jsonreader.h>

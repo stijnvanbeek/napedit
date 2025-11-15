@@ -337,25 +337,31 @@
                                     "Type": "nap::gui::MenuItem",
                                     "mID": "menuNew",
                                     "Title": "New",
-                                    "Action": ""
+                                    "Action": "NewAction"
                                 },
                                 {
                                     "Type": "nap::gui::MenuItem",
                                     "mID": "menuOpen",
                                     "Title": "Open",
-                                    "Action": ""
+                                    "Action": "OpenAction"
                                 },
                                 {
                                     "Type": "nap::gui::MenuItem",
-                                    "mID": "menuClose",
-                                    "Title": "Close",
-                                    "Action": ""
+                                    "mID": "menuSave",
+                                    "Title": "Save",
+                                    "Action": "SaveAction"
+                                },
+                                {
+                                    "Type": "nap::gui::MenuItem",
+                                    "mID": "menuSaveAs",
+                                    "Title": "Save As...",
+                                    "Action": "SaveAsAction"
                                 },
                                 {
                                     "Type": "nap::gui::MenuItem",
                                     "mID": "menuQuit",
                                     "Title": "Quit",
-                                    "Action": ""
+                                    "Action": "QuitAction"
                                 }
                             ]
                         }
@@ -401,6 +407,42 @@
                             "Usage": "Static",
                             "ImagePath": "icons/component.png",
                             "GenerateLods": true
+                        }
+                    ],
+                    "Children": []
+                },
+                {
+                    "Type": "nap::ResourceGroup",
+                    "mID": "Actions",
+                    "Members": [
+                        {
+                            "Type": "nap::gui::Action",
+                            "mID": "NewAction"
+                        },
+                        {
+                            "Type": "nap::gui::Action",
+                            "mID": "OpenAction"
+                        },
+                        {
+                            "Type": "nap::gui::Action",
+                            "mID": "SaveAction"
+                        },
+                        {
+                            "Type": "nap::gui::Action",
+                            "mID": "SaveAsAction"
+                        },
+                        {
+                            "Type": "nap::gui::Action",
+                            "mID": "QuitAction"
+                        },
+                        {
+                            "Type": "nap::edit::ActionController",
+                            "mID": "ActionController",
+                            "Model": "Model",
+                            "NewAction": "NewAction",
+                            "OpenAction": "OpenAction",
+                            "SaveAction": "SaveAction",
+                            "SaveAsAction": "SaveAsAction"
                         }
                     ],
                     "Children": []

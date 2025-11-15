@@ -4,6 +4,7 @@
 #include <layoutconstants.h>
 #include <model.h>
 #include <Gui/Gui.h>
+#include <Gui/Action.h>
 #include <nap/core.h>
 
 #include "imguifunctions.h"

@@ -143,6 +143,21 @@ namespace nap
              */
             const std::map<std::string, const rtti::TypeInfo*>& getGroupTypes() const { return mGroupTypes; }
 
+            /**
+             * Clear all data, blank model.
+             */
+            void clear();
+
+            /**
+             * Saves current data model to a json file.
+             * @param filename Path to the json file.
+             * @param errorState Logs errors during serialization
+             * @return true on success
+             */
+            bool saveToFile(const std::string& filenamem, utility::ErrorState &errorState);
+
+            bool loadFromFile(const std::string& filename, utility::ErrorState &errorState);
+
         private:
             bool eraseFromTree(std::vector<ResourcePtr<Resource>>& branch, Object& resource);
             bool eraseFromTree(std::vector<ResourcePtr<ResourceGroup>>& branch, Object& resource);
@@ -150,6 +165,8 @@ namespace nap
             bool eraseFromTree(Object& resource);
 
             bool findInTree(const std::string& mID, std::vector<ResourcePtr<Resource>>& branch);
+
+            void rebuildTree(); // Rebuilds the tree from the flat mResources list.
 
             std::string getUniqueID(const std::string& baseID);
 
