@@ -13,48 +13,49 @@
 #include <rtti/jsonwriter.h>
 #include <rtti/jsonreader.h>
 
-namespace nap 
-{    
-    bool CoreApp::init(utility::ErrorState& error)
-    {
-	    // Retrieve services
-    	mRenderService	= getCore().getService<nap::RenderService>();
-    	mSceneService	= getCore().getService<nap::SceneService>();
-    	mInputService	= getCore().getService<nap::InputService>();
-    	mGuiService		= getCore().getService<nap::IMGuiService>();
+namespace nap
+{
 
-    	// Fetch the resource manager
-    	mResourceManager = getCore().getResourceManager();
+	bool CoreApp::init(utility::ErrorState& error)
+	{
+		// Retrieve services
+		mRenderService	= getCore().getService<nap::RenderService>();
+		mSceneService	= getCore().getService<nap::SceneService>();
+		mInputService	= getCore().getService<nap::InputService>();
+		mGuiService		= getCore().getService<nap::IMGuiService>();
 
-    	// Get the render window
-    	mRenderWindow = mResourceManager->findObject<nap::RenderWindow>("Window");
-    	if (!error.check(mRenderWindow != nullptr, "unable to find render window with name: %s", "Window"))
-    		return false;
+		// Fetch the resource manager
+		mResourceManager = getCore().getResourceManager();
 
-    	// Get the scene that contains our entities and components
-    	mScene = mResourceManager->findObject<Scene>("Scene");
-    	if (!error.check(mScene != nullptr, "unable to find scene with name: %s", "Scene"))
-    		return false;
+		// Get the render window
+		mRenderWindow = mResourceManager->findObject<nap::RenderWindow>("Window");
+		if (!error.check(mRenderWindow != nullptr, "unable to find render window with name: %s", "Window"))
+			return false;
 
-    	mModel = mResourceManager->findObject<edit::Model>("Model");
-    	if (!error.check(mModel != nullptr, "unable to find Model with name: %s", "Scene"))
-    		return false;
+		// Get the scene that contains our entities and components
+		mScene = mResourceManager->findObject<Scene>("Scene");
+		if (!error.check(mScene != nullptr, "unable to find scene with name: %s", "Scene"))
+			return false;
 
-    	mWindow = mResourceManager->findObject<gui::GuiWindow>("MainWindow");
-    	if (!error.check(mWindow != nullptr, "unable to find main window gui"))
-    		return false;
+		mModel = mResourceManager->findObject<edit::Model>("Model");
+		if (!error.check(mModel != nullptr, "unable to find Model with name: %s", "Scene"))
+			return false;
 
-    	capFramerate(true);
-    	setFramerate(60.f);
+		mWindow = mResourceManager->findObject<gui::GuiWindow>("MainWindow");
+		if (!error.check(mWindow != nullptr, "unable to find main window gui"))
+			return false;
 
-    	// All done!
-        return true;
-    }
+		capFramerate(true);
+		setFramerate(60.f);
+
+		// All done!
+		return true;
+	}
 
 
-    // Render app
-    void CoreApp::render()
-    {
+	// Render app
+	void CoreApp::render()
+	{
 		// Signal the beginning of a new frame, allowing it to be recorded.
 		// The system might wait until all commands that were previously associated with the new frame have been processed on the GPU.
 		// Multiple frames are in flight at the same time, but if the graphics load is heavy the system might wait here to ensure resources are available.
@@ -78,17 +79,17 @@ namespace nap
 
 		// Proceed to next frame
 		mRenderService->endFrame();
-    }
+	}
 
 
-    void CoreApp::windowMessageReceived(WindowEventPtr windowEvent)
-    {
+	void CoreApp::windowMessageReceived(WindowEventPtr windowEvent)
+	{
 		mRenderService->addEvent(std::move(windowEvent));
-    }
+	}
 
 
-    void CoreApp::inputMessageReceived(InputEventPtr inputEvent)
-    {
+	void CoreApp::inputMessageReceived(InputEventPtr inputEvent)
+	{
 		// If we pressed escape, quit the loop
 		if (inputEvent->get_type().is_derived_from(RTTI_OF(nap::KeyPressEvent)))
 		{
@@ -100,24 +101,24 @@ namespace nap
 				mRenderWindow->toggleFullscreen();
 		}
 		mInputService->addEvent(std::move(inputEvent));
-    }
+	}
 
 
-    int CoreApp::shutdown()
-    {
+	int CoreApp::shutdown()
+	{
 		return 0;
-    }
+	}
 
 
 	// Update app
-    void CoreApp::update(double deltaTime)
-    {
+	void CoreApp::update(double deltaTime)
+	{
 		// Use a default input router to forward input events (recursively) to all input components in the scene
 		// This is explicit because we don't know what entity should handle the events from a specific window.
 		nap::DefaultInputRouter input_router(true);
 		mInputService->processWindowEvents(*mRenderWindow, input_router, { &mScene->getRootEntity() });
 
-    	mWindow->show();
+		mWindow->show();
+	}
 
-    }
 }
