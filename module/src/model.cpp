@@ -429,12 +429,6 @@ namespace nap
 		}
 
 
-		void Model::rebuildTree()
-		{
-
-		}
-
-
 		std::string Model::getUniqueID(const std::string &aBaseID)
 		{
 			auto baseID = aBaseID;

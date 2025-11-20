@@ -47,20 +47,6 @@ namespace nap
     	capFramerate(true);
     	setFramerate(60.f);
 
-    	// Test
-    	TestResource testResource;
-    	TestResource testResource2;
-    	testResource.mID = "test1";
-    	testResource2.mID = "test2";
-    	std::vector<Object*> resources = { &testResource, &testResource2 };
-    	testResource.mPointer = &testResource2;
-    	JSONWriter writer;
-    	if (serializeObjects(resources, writer, error))
-    		utility::writeStringToFile("test.json", writer.GetJSON());
-
-    	DeserializeResult deserializer;
-    	deserializeJSONFile("test.json", EPropertyValidationMode::DisallowMissingProperties, EPointerPropertyMode::NoRawPointers, mResourceManager->getFactory(), deserializer, error);
-
     	// All done!
         return true;
     }

@@ -166,8 +166,6 @@ namespace nap
 
             bool findInTree(const std::string& mID, std::vector<ResourcePtr<Resource>>& branch);
 
-            void rebuildTree(); // Rebuilds the tree from the flat mResources list.
-
             std::string getUniqueID(const std::string& baseID);
 
         	std::vector<std::unique_ptr<Resource>> mResources;
