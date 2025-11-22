@@ -5,7 +5,7 @@
 
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceList)
 	RTTI_CONSTRUCTOR(nap::Core&)
-	RTTI_PROPERTY("Model", &nap::edit::ResourceList::mModel, nap::rtti::EPropertyMetaData::Required)
+	RTTI_PROPERTY("Selector", &nap::edit::ResourceList::mSelector, nap::rtti::EPropertyMetaData::Required)
 	RTTI_PROPERTY("LayoutConstants", &nap::edit::ResourceList::mLayoutConstants, nap::rtti::EPropertyMetaData::Required)
 	RTTI_PROPERTY("ResourceIcon", &nap::edit::ResourceList::mResourceIcon, nap::rtti::EPropertyMetaData::Required)
 	RTTI_PROPERTY("GroupIcon", &nap::edit::ResourceList::mGroupIcon, nap::rtti::EPropertyMetaData::Required)
@@ -26,6 +26,7 @@ namespace nap
 
 		bool ResourceList::init(utility::ErrorState &errorState)
 		{
+			mModel = mSelector->mModel.get();
 			return true;
 		}
 
@@ -59,7 +60,7 @@ namespace nap
 			{
 				mResourcesNodeSelected = true;
 				mEntitiesNodeSelected = false;
-				mSelectedID.clear();
+				mSelector->clear();
 			}
 			if (resourceTreeOpen)
 			{
@@ -80,7 +81,7 @@ namespace nap
 			{
 				mEntitiesNodeSelected = true;
 				mResourcesNodeSelected = false;
-				mSelectedID.clear();
+				mSelector->clear();
 			}
 			if (entityTreeOpen)
 			{
@@ -89,7 +90,7 @@ namespace nap
 			}
 			ImGui::PopStyleVar();
 
-			if (!mSelectedID.empty())
+			if (!mSelector->empty())
 			{
 				mEntitiesNodeSelected = false;
 				mResourcesNodeSelected = false;
@@ -102,10 +103,10 @@ namespace nap
 				mEnteredID = mRenameBuffer;
 			if (!mEnteredID.empty())
 			{
-				if (mEnteredID != mSelectedID && mModel->findResource(mEnteredID) == nullptr)
+				if (mEnteredID != mSelector->get() && mModel->findResource(mEnteredID) == nullptr)
 				{
-					mModel->renameResource(mSelectedID, mEnteredID);
-					mSelectedID = mEnteredID;
+					mModel->renameResource(mSelector->get(), mEnteredID);
+					mSelector->set(mEnteredID);
 				}
 				mEnteredID.clear();
 				mEditedID.clear();
@@ -118,10 +119,10 @@ namespace nap
 			{
 				IGroup *selectedGroup = nullptr;
 				Entity* selectedEntity = nullptr;
-				if (!mSelectedID.empty())
+				if (!mSelector->empty())
 				{
-					selectedGroup = rtti_cast<IGroup>(mModel->findResource(mSelectedID));
-					selectedEntity = rtti_cast<Entity>(mModel->findResource(mSelectedID));
+					selectedGroup = rtti_cast<IGroup>(mModel->findResource(mSelector->get()));
+					selectedEntity = rtti_cast<Entity>(mModel->findResource(mSelector->get()));
 				}
 
 				// When a resource is selected
@@ -142,12 +143,12 @@ namespace nap
 					ImGui::SameLine();
 					if (ImGui::Selectable("Create Group..."))
 					{
-						auto selectedGroup = rtti_cast<ResourceGroup>(mModel->findResource(mSelectedID));
+						auto selectedGroup = rtti_cast<ResourceGroup>(mModel->findResource(mSelector->get()));
 						if (selectedGroup != nullptr)
 						{
 							auto type = selectedGroup->get_type();
 							mModel->createGroup(type);
-							mSelectedID.clear();
+							mSelector->clear();
 						} else
 						{
 							std::vector<std::string> menuItems;
@@ -190,8 +191,8 @@ namespace nap
 					if (ImGui::Selectable("Create child..."))
 					{
 						auto mID = mModel->createGroup(selectedGroup->get_type());
-						mModel->moveGroupToParent(mID, mSelectedID);
-						mSelectedID.clear();
+						mModel->moveGroupToParent(mID, mSelector->get());
+						mSelector->clear();
 					}
 				}
 
@@ -229,17 +230,17 @@ namespace nap
 				}
 
 				// For all selections
-				if (!mSelectedID.empty())
+				if (!mSelector->empty())
 				{
-					if (ImGui::Selectable(std::string("Rename " + mSelectedID).c_str()))
+					if (ImGui::Selectable(std::string("Rename " + mSelector->get()).c_str()))
 					{
-						mEditedID = mSelectedID;
+						mEditedID = mSelector->get();
 						strcpy(mRenameBuffer, mEditedID.c_str());
 					}
-					if (ImGui::Selectable(std::string("Remove " + mSelectedID).c_str()))
+					if (ImGui::Selectable(std::string("Remove " + mSelector->get()).c_str()))
 					{
-						mModel->removeResource(mSelectedID);
-						mSelectedID.clear();
+						mModel->removeResource(mSelector->get());
+						mSelector->clear();
 					}
 				}
 
@@ -258,9 +259,9 @@ namespace nap
 					auto typeName = mFilteredMenu.getSelectedItem();
 					auto type = rtti::TypeInfo::get_by_name(typeName);
 					auto mID = mModel->createResource(type, typeName);
-					if (!mSelectedID.empty())
-						mModel->moveResourceToGroup(mID, mSelectedID);
-					mSelectedID.clear();
+					if (!mSelector->empty())
+						mModel->moveResourceToGroup(mID, mSelector->get());
+					mSelector->clear();
 				}
 				ImGui::EndPopup();
 			}
@@ -273,9 +274,9 @@ namespace nap
 					auto typeName = mFilteredMenu.getSelectedItem();
 					auto type = rtti::TypeInfo::get_by_name(typeName);
 					auto mID = mModel->createGroup(type, typeName);
-					if (!mSelectedID.empty())
-						mModel->moveGroupToParent(mID, mSelectedID);
-					mSelectedID.clear();
+					if (!mSelector->empty())
+						mModel->moveGroupToParent(mID, mSelector->get());
+					mSelector->clear();
 				}
 				ImGui::EndPopup();
 			}
@@ -286,9 +287,9 @@ namespace nap
 				if (mFilteredMenu.show())
 				{
 					auto child = mFilteredMenu.getSelectedItem();
-					if (!mSelectedID.empty())
-						mModel->moveEntityToParent(mSelectedID, child);
-					mSelectedID.clear();
+					if (!mSelector->empty())
+						mModel->moveEntityToParent(mSelector->get(), child);
+					mSelector->clear();
 				}
 				ImGui::EndPopup();
 			}
@@ -300,8 +301,8 @@ namespace nap
 				{
 					auto typeName = mFilteredMenu.getSelectedItem();
 					auto type = rtti::TypeInfo::get_by_name(typeName);
-					auto mID = mModel->createComponent(type, mSelectedID);
-					mSelectedID.clear();
+					auto mID = mModel->createComponent(type, mSelector->get());
+					mSelector->clear();
 				}
 				ImGui::EndPopup();
 			}

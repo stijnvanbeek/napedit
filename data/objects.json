@@ -22,6 +22,7 @@
             "Borderless": false,
             "Resizable": true,
             "Visible": true,
+            "AlwaysOnTop": false,
             "SampleShading": true,
             "Title": "Example Window",
             "Width": 1280,
@@ -37,6 +38,7 @@
             },
             "Samples": "Four",
             "AdditionalSwapImages": 1,
+            "Clear": true,
             "RestoreSize": true,
             "RestorePosition": true
         },
@@ -176,7 +178,7 @@
                     "mID": "ResourceList",
                     "Title": "",
                     "Style": "",
-                    "Model": "Model",
+                    "Selector": "Selector",
                     "LayoutConstants": "LayoutConstants",
                     "ResourceIcon": "ResourceIcon",
                     "GroupIcon": "GroupIcon",
@@ -188,8 +190,7 @@
                     "mID": "Inspector",
                     "Title": "",
                     "Style": "",
-                    "Model": "Model",
-                    "ResourceListGui": "ResourceList",
+                    "ResourceSelector": "Selector",
                     "LayoutConstants": "LayoutConstants"
                 },
                 {
@@ -417,28 +418,38 @@
                     "Members": [
                         {
                             "Type": "nap::gui::Action",
-                            "mID": "NewAction"
+                            "mID": "NewAction",
+                            "Key": "N",
+                            "KeyModifier": "Ctrl"
                         },
                         {
                             "Type": "nap::gui::Action",
-                            "mID": "OpenAction"
+                            "mID": "OpenAction",
+                            "Key": "O",
+                            "KeyModifier": "Ctrl"
                         },
                         {
                             "Type": "nap::gui::Action",
-                            "mID": "SaveAction"
+                            "mID": "SaveAction",
+                            "Key": "S",
+                            "KeyModifier": "Ctrl"
                         },
                         {
                             "Type": "nap::gui::Action",
-                            "mID": "SaveAsAction"
+                            "mID": "SaveAsAction",
+                            "Key": "Unknown",
+                            "KeyModifier": "None"
                         },
                         {
                             "Type": "nap::gui::Action",
-                            "mID": "QuitAction"
+                            "mID": "QuitAction",
+                            "Key": "Q",
+                            "KeyModifier": "Ctrl"
                         },
                         {
                             "Type": "nap::edit::ActionController",
                             "mID": "ActionController",
-                            "Model": "Model",
+                            "Selector": "Selector",
                             "NewAction": "NewAction",
                             "OpenAction": "OpenAction",
                             "SaveAction": "SaveAction",
@@ -457,6 +468,11 @@
         {
             "Type": "nap::edit::Model",
             "mID": "Model"
+        },
+        {
+            "Type": "nap::edit::Selector",
+            "mID": "Selector",
+            "Model": "Model"
         }
     ]
 }

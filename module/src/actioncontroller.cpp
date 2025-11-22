@@ -4,7 +4,7 @@
 #include <NativeFileDialog.h>
 
 RTTI_BEGIN_CLASS(nap::edit::ActionController)
-    RTTI_PROPERTY("Model", &nap::edit::ActionController::mModel, nap::rtti::EPropertyMetaData::Required)
+    RTTI_PROPERTY("Selector", &nap::edit::ActionController::mSelector, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("NewAction", &nap::edit::ActionController::mNewAction, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("OpenAction", &nap::edit::ActionController::mOpenAction, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("SaveAction", &nap::edit::ActionController::mSaveAction, nap::rtti::EPropertyMetaData::Required)
@@ -20,6 +20,7 @@ namespace nap
 
         bool ActionController::init(utility::ErrorState& errorState)
         {
+            mModel = mSelector->mModel.get();
             mNewAction->performSignal.connect(mNewActionSlot);
             mOpenAction->performSignal.connect(mOpenActionSlot);
             mSaveAction->performSignal.connect(mSaveActionSlot);
@@ -32,6 +33,7 @@ namespace nap
         {
             mModel->clear();
             mPath.clear();
+            mSelector->clear();
         }
 
 
@@ -42,6 +44,7 @@ namespace nap
                 utility::ErrorState errorState;
                 if (!mModel->loadFromFile(mPath, errorState))
                     Logger::error(errorState.toString().c_str());
+                mSelector->clear();
             }
         }
 

@@ -3,14 +3,15 @@
 #include <nap/resource.h>
 #include <nap/core.h>
 
-#include "entity.h"
-#include "nap/group.h"
+#include <entity.h>
+#include <nap/group.h>
 
 namespace nap
 {
 
     namespace edit
     {
+
         /**
          * Data model that is being edited.
          * All resources are owned in a flat list.
@@ -175,6 +176,46 @@ namespace nap
             std::map<std::string, const rtti::TypeInfo*> mGroupTypes;
 
             Core& mCore;
+        };
+
+
+        /**
+         * Represents a selection of a resource owned by the Model
+         */
+        class NAPAPI Selector : public Resource
+        {
+            RTTI_ENABLE(Resource)
+
+        public:
+            ResourcePtr<Model> mModel; ///< Property: 'Model' Pointer to the Model the resource is selected from
+
+            /**
+             * Selects a resource
+             * @param mID Unique ID of the selected resource
+             */
+            void set(const std::string& mID)
+            {
+                assert(mModel->findResource(mID) != nullptr);
+                mSelection = mID;
+            }
+
+            /**
+             * @return Return the selection, returns empty string if nothing is selected.
+             */
+            const std::string& get() const { return mSelection; }
+
+            /**
+             * Clears the selection.
+             */
+            void clear() { mSelection.clear(); }
+
+            /**
+             * @return Whether the selection is not set.
+             */
+            bool empty() const { return mSelection.empty(); }
+
+        private:
+            std::string mSelection;
         };
 
 

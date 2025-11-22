@@ -27,7 +27,7 @@ namespace nap
         public:
             ResourceList(Core& core);
 
-            ResourcePtr<Model> mModel; ///< Property: 'Model' Link to the data model where the edited resource lives.
+            ResourcePtr<Selector> mSelector; ///< Property: 'Selector' Link to Selector resource to keep track of the selected object
             ResourcePtr<LayoutConstants> mLayoutConstants; ///< Property: 'LayoutConstants' Link to a set of values used to layout the gui.
 
             ResourcePtr<Texture2D> mEntityIcon; ///< Property: 'EntityIcon' Icon showed at the entity main tree node.
@@ -37,17 +37,6 @@ namespace nap
 
             // Inherited
             bool init(utility::ErrorState& errorState) override;
-
-            /**
-             * Selects a resource in the list
-             * @param id mID of the resource to select.
-             */
-            void setSelectedID(const std::string& id) { mSelectedID = id; }
-
-            /**
-             * @return mID of the selected resource from the Model.
-             */
-            const std::string& getSelectedID() const { return mSelectedID; }
 
         private:
             // Inherited from Gui
@@ -65,7 +54,6 @@ namespace nap
 
             char mRenameBuffer[128]; // Buffer for renaming a resource.
 
-            std::string mSelectedID; // mID of the selected resource.
             std::string mEditedID; // mID of the resource that is being renamed.
             std::string mEnteredID; // New mID that has been entered for the mID that is being renamed (stored in mEditedID)
 
@@ -79,6 +67,7 @@ namespace nap
             bool mEntitiesNodeSelected = false;
 
             Core& mCore;
+            Model* mModel = nullptr;
             IMGuiService* mGuiService = nullptr;
         };
 
@@ -112,7 +101,7 @@ namespace nap
                 ImGui::SameLine();
 
                 // If this node resource is selected and the user is renaming it, then the input field is focused.
-                if (mSelectedID == resource->mID && mStartEditing)
+                if (mSelector->get() == resource->mID && mStartEditing)
                 {
                     mEditedID = resource->mID;
                     mStartEditing = false;
@@ -134,9 +123,9 @@ namespace nap
 
                 // If not being renamed, draw the text label.
                 else {
-                    if (Selectable(resource->mID.c_str(), mSelectedID == resource->mID, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale()))
+                    if (Selectable(resource->mID.c_str(), mSelector->get() == resource->mID, mTypeColumnOffset - mNameColumnOffset - ImGui::GetCursorPosX() - 10 * mGuiService->getScale()))
                     {
-                        mSelectedID = resource->mID;
+                        mSelector->set(resource->mID);
                         mEditedID.clear();
                     }
                     // Check if the user double clicked on the resource name.

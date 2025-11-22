@@ -6,11 +6,14 @@
 #include <entity.h>
 #include <rtti/jsonwriter.h>
 #include <rtti/defaultlinkresolver.h>
-
-#include "rtti/jsonreader.h"
+#include <rtti/jsonreader.h>
 
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::Model)
 	RTTI_CONSTRUCTOR(nap::Core&)
+RTTI_END_CLASS
+
+RTTI_BEGIN_CLASS(nap::edit::Selector)
+	RTTI_PROPERTY("Model", &nap::edit::Selector::mModel, nap::rtti::EPropertyMetaData::Required)
 RTTI_END_CLASS
 
 namespace nap
@@ -442,6 +445,7 @@ namespace nap
 			}
 			return mID;
 		}
+
 
 	}
 

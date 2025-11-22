@@ -1,8 +1,9 @@
 #pragma once
 
-#include <resourcelist.h>
+#include <model.h>
 #include <propertyeditor.h>
 #include <filteredmenu.h>
+#include <layoutconstants.h>
 
   namespace nap
 {
@@ -20,8 +21,7 @@
 
             bool init(utility::ErrorState& errorState) override;
 
-            ResourcePtr<Model> mModel; ///< Property: 'Model' Link to the data model where the edited resource lives.
-            ResourcePtr<ResourceList> mResourceList; ///< Property: 'ResourceListGui' Link to the resource list gui. The selected Resource in the ResourceList will be edited.
+            ResourcePtr<Selector> mResourceSelector; ///< Property: 'ResourceSelector' Link to the Selector that selects a resource from the data model being edited.
             ResourcePtr<LayoutConstants> mLayoutConstants; ///< Property: 'LayoutConstants' Link to a set of values used to layout the gui.
 
             /**
@@ -90,6 +90,7 @@
             bool mOpenResourceMenu = false;
             bool mOpenResourceTypeMenu = false;
             IMGuiService* mGuiService = nullptr;
+            Model* mModel = nullptr;
 
             std::map<const rtti::TypeInfo, std::unique_ptr<IPropertyEditor>> mPropertyEditors;
         };

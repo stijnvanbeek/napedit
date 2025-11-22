@@ -20,7 +20,7 @@ namespace nap
             ResourcePtr<gui::Action> mSaveAction;
             ResourcePtr<gui::Action> mSaveAsAction;
 
-            ResourcePtr<Model> mModel;
+            ResourcePtr<Selector> mSelector;
 
             bool init(utility::ErrorState& errorState) override;
             
@@ -35,6 +35,7 @@ namespace nap
             void onSaveAsAction(gui::Action&);
 
             std::string mPath;
+            Model* mModel = nullptr;
         };
     
     }

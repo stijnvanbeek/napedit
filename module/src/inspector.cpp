@@ -1,13 +1,13 @@
 #include "inspector.h"
-#include <imguifunctions.h>
 #include <model.h>
-
-#include "imguiservice.h"
+#include <imguifunctions.h>
+#include <imguiservice.h>
+#include <imgui/imgui.h>
+#include "imgui_internal.h"
 
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::Inspector)
     RTTI_CONSTRUCTOR(nap::Core&)
-    RTTI_PROPERTY("Model", &nap::edit::Inspector::mModel, nap::rtti::EPropertyMetaData::Required)
-    RTTI_PROPERTY("ResourceListGui", &nap::edit::Inspector::mResourceList, nap::rtti::EPropertyMetaData::Required)
+    RTTI_PROPERTY("ResourceSelector", &nap::edit::Inspector::mResourceSelector, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("LayoutConstants", &nap::edit::Inspector::mLayoutConstants, nap::rtti::EPropertyMetaData::Required)
 RTTI_END_CLASS
 
@@ -25,6 +25,8 @@ namespace nap
 
         bool Inspector::init(utility::ErrorState &errorState)
         {
+            mModel = mResourceSelector->mModel.get();
+
             // Scope for linked property editors
             auto editorTypes = RTTI_OF(IPropertyEditor).get_derived_classes();
             for (auto& editorType : editorTypes)
@@ -56,7 +58,7 @@ namespace nap
             ImGui::EndColumns();
             ImGui::PopStyleColor();
 
-            if (mResourceList->getSelectedID().empty())
+            if (mResourceSelector->empty())
                 return;
 
             ImGui::SetNextWindowBgAlpha(0.3);
@@ -64,11 +66,11 @@ namespace nap
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + mLayoutConstants->listOffset());
 
             // Check if selected resource has changed
-            if (mResourceList->getSelectedID() != mInspectedResourceID)
+            if (mResourceSelector->get() != mInspectedResourceID)
             {
                 mSelection.clear();
-                mInspectedResourceID = mResourceList->getSelectedID();
-                mInspectedResource = mModel->findResource(mResourceList->getSelectedID());
+                mInspectedResourceID = mResourceSelector->get();
+                mInspectedResource = mModel->findResource(mResourceSelector->get());
                 assert(mInspectedResource != nullptr);
             }
 
@@ -416,7 +418,7 @@ namespace nap
                 auto newID = std::string(buffer);
                 mModel->renameResource(oldID, newID);
                 if (parentPath.getLength() == 0) // Are we editing the ID of the selected resource?
-                    mResourceList->setSelectedID(value.to_string());
+                    mResourceSelector->set(value.to_string());
             }
         }
 

@@ -2,16 +2,11 @@
 #include "app.h"
 
 // External Includes
-#include <utility/fileutils.h>
 #include <nap/logger.h>
 #include <inputrouter.h>
 #include <rendergnomoncomponent.h>
-
-#include <testresource.h>
-
-#include <imgui_internal.h>
-#include <rtti/jsonwriter.h>
 #include <rtti/jsonreader.h>
+#include <Gui/GuiService.h>
 
 namespace nap
 {
@@ -22,7 +17,8 @@ namespace nap
 		mRenderService	= getCore().getService<nap::RenderService>();
 		mSceneService	= getCore().getService<nap::SceneService>();
 		mInputService	= getCore().getService<nap::InputService>();
-		mGuiService		= getCore().getService<nap::IMGuiService>();
+		mIMGuiService	= getCore().getService<nap::IMGuiService>();
+		mGuiService		= getCore().getService<nap::gui::GuiService>();
 
 		// Fetch the resource manager
 		mResourceManager = getCore().getResourceManager();
@@ -68,7 +64,7 @@ namespace nap
 			mRenderWindow->beginRendering();
 
 			// Draw GUI elements
-			mGuiService->draw();
+			mIMGuiService->draw();
 
 			// Stop render pass
 			mRenderWindow->endRendering();
@@ -94,11 +90,7 @@ namespace nap
 		if (inputEvent->get_type().is_derived_from(RTTI_OF(nap::KeyPressEvent)))
 		{
 			nap::KeyPressEvent* press_event = static_cast<nap::KeyPressEvent*>(inputEvent.get());
-			if (press_event->mKey == nap::EKeyCode::KEY_ESCAPE)
-				quit();
-
-			if (press_event->mKey == nap::EKeyCode::KEY_f)
-				mRenderWindow->toggleFullscreen();
+			mGuiService->processKeyEvent(*press_event);
 		}
 		mInputService->addEvent(std::move(inputEvent));
 	}
