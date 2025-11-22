@@ -319,8 +319,10 @@ namespace nap
 				mResources.emplace_back(std::move(std::unique_ptr<Resource>(raw)));
 			}
 
+			// Populate the roots of the tree
 			for (auto& resource : mResources)
 			{
+				// Look for an embedded pointer to the resource
 				bool embeddedPointerFound = false;
 				for (auto& unresolvedPointer : result.mUnresolvedPointers)
 				{
@@ -335,14 +337,45 @@ namespace nap
 						}
 					}
 				}
+
+				// If the resource is not embedded, it needs to be added to the root of the tree
 				if (!embeddedPointerFound)
 				{
+					// Is the resource a group?
 					if (resource->get_type().is_derived_from(RTTI_OF(IGroup)))
-						mTree.mGroups.emplace_back(static_cast<ResourceGroup*>(resource.get()));
-					if (resource->get_type().is_derived_from(RTTI_OF(Entity)))
-						mTree.mEntities.emplace_back(static_cast<Entity*>(resource.get()));
+					{
+						// Avoid adding the same group more than once
+						auto it = std::find_if(mTree.mGroups.begin(), mTree.mGroups.end(), [&](const auto& group)
+						{
+							return group->mID == resource->mID;
+						});
+						if (it == mTree.mGroups.end())
+							mTree.mGroups.emplace_back(static_cast<ResourceGroup*>(resource.get()));
+					}
+
+					// Is the resource an entity?
+					else if (resource->get_type().is_derived_from(RTTI_OF(Entity)))
+					{
+						// Avoid adding the same entity more than once
+						auto it = std::find_if(mTree.mEntities.begin(), mTree.mEntities.end(), [&](const auto& entity)
+						{
+							return entity->mID == resource->mID;
+						});
+						if (it == mTree.mEntities.end())
+							mTree.mEntities.emplace_back(static_cast<Entity*>(resource.get()));
+					}
+
+					// Is the resource a resource?
 					else
-						mTree.mResources.emplace_back(resource.get());
+					{
+						// Avoid adding the same resource more than once
+						auto it = std::find_if(mTree.mResources.begin(), mTree.mResources.end(), [&](const auto& element)
+						{
+							return resource->mID == element->mID;
+						});
+						if (it == mTree.mResources.end())
+							mTree.mResources.emplace_back(resource.get());
+					}
 				}
 			}
 
@@ -420,15 +453,6 @@ namespace nap
 		bool Model::eraseFromTree(Object &resource)
 		{
 			return eraseFromTree(mTree.mResources, resource) || eraseFromTree(mTree.mGroups, resource) || eraseFromTree(mTree.mEntities, resource);
-		}
-
-
-		bool Model::findInTree(const std::string &mID, std::vector<ResourcePtr<Resource>> &branch)
-		{
-			auto it = std::find_if(branch.begin(), branch.end(), [&mID](const auto& resource) { return resource->mID == mID; });
-			if (it != branch.end())
-				return true;
-			return false;
 		}
 
 

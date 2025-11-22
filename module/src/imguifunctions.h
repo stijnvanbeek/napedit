@@ -11,9 +11,10 @@ namespace nap
 		/**
 		 * Display tree node arrow
 		 * @param label Unique label for the widget for internal use by ImGui.
+		 * @param defaultOpen True when the tree node is opened by default
 		 * @return True when the tree node is opened
 		 */
-		bool TreeNodeArrow(const char* label);
+		bool TreeNodeArrow(const char* label, bool defaultOpen = false);
 
 		/**
 		 * Display a selectable item with a label

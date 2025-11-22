@@ -52,7 +52,7 @@ namespace nap
 			// Draw resources tree
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 0));
 			ImGui::SetCursorPosX(mNameColumnOffset + mLayoutConstants->treeNodeArrowShift());
-			bool resourceTreeOpen = TreeNodeArrow("###ResourcesNode");
+			bool resourceTreeOpen = TreeNodeArrow("###ResourcesNode", true);
 			ImGui::SameLine();
 			Icon(*mResourceIcon, mGuiService);
 			ImGui::SameLine();
@@ -73,7 +73,7 @@ namespace nap
 			// Draw entity tree
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 0));
 			ImGui::SetCursorPosX(mNameColumnOffset + mLayoutConstants->treeNodeArrowShift());
-			bool entityTreeOpen = TreeNodeArrow("##EntitiesNode");
+			bool entityTreeOpen = TreeNodeArrow("##EntitiesNode", true);
 			ImGui::SameLine();
 			Icon(*mEntityIcon, mGuiService);
 			ImGui::SameLine();

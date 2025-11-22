@@ -165,8 +165,6 @@ namespace nap
             bool eraseFromTree(std::vector<ResourcePtr<Entity>>& branch, Object& resource);
             bool eraseFromTree(Object& resource);
 
-            bool findInTree(const std::string& mID, std::vector<ResourcePtr<Resource>>& branch);
-
             std::string getUniqueID(const std::string& baseID);
 
         	std::vector<std::unique_ptr<Resource>> mResources;

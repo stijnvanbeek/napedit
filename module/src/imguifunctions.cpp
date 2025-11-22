@@ -8,11 +8,14 @@ namespace nap
 	namespace edit
 	{
 
-		bool TreeNodeArrow(const char *label)
+		bool TreeNodeArrow(const char *label, bool defaultOpen)
 		{
 			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
 			ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.f, 0.f, 0.f, 0.f));
-			bool opened = ImGui::TreeNodeEx(label, ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_DefaultOpen);
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowItemOverlap;
+			if (defaultOpen)
+				flags |= ImGuiTreeNodeFlags_DefaultOpen;
+			bool opened = ImGui::TreeNodeEx(label, flags);
 			ImGui::PopStyleColor();
 			ImGui::PopStyleColor();
 			return opened;
