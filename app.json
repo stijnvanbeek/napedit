@@ -5,7 +5,7 @@
     "Version": "1.0.0",
     "Data": "data/objects.json",
     "PathMapping": "cache/path_mapping.json",
-    "ServiceConfig": "config.json",
+    "ServiceConfig": "",
     "RequiredModules": [
         "napnapkin2",
         "napapp",
