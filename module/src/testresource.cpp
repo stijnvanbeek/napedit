@@ -22,6 +22,8 @@ RTTI_BEGIN_CLASS(nap::TestResource)
     RTTI_PROPERTY("EmbeddedPointerVector", &nap::TestResource::mEmbeddedPointerVector, nap::rtti::EPropertyMetaData::Embedded)
     RTTI_PROPERTY("Array", &nap::TestResource::mArray, nap::rtti::EPropertyMetaData::Default)
     RTTI_PROPERTY("ObjectVector", &nap::TestResource::mObjectVector, nap::rtti::EPropertyMetaData::Default)
+    RTTI_PROPERTY("Vec2", &nap::TestResource::mVec2, nap::rtti::EPropertyMetaData::Default)
+    RTTI_PROPERTY("Vec3", &nap::TestResource::mVec3, nap::rtti::EPropertyMetaData::Default)
 RTTI_END_CLASS
 
 namespace nap

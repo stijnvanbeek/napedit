@@ -3,6 +3,9 @@
 #include <nap/resource.h>
 #include <nap/resourceptr.h>
 
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+
 namespace nap
 {
 
@@ -35,6 +38,8 @@ namespace nap
         std::vector<ResourcePtr<TestResource>> mEmbeddedPointerVector;
         std::vector<TestStruct> mObjectVector;
         std::array<int, 4> mArray;
+        glm::vec2 mVec2;
+        glm::vec3 mVec3;
 
     private:
     };
