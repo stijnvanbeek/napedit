@@ -225,11 +225,52 @@ namespace nap
 
 		void Model::removeResource(const std::string &mID)
 		{
+			// Find the resource to remove
 			auto it = std::find_if(mResources.begin(), mResources.end(), [&mID](const auto& resource) { return resource->mID == mID; });
 			assert(it != mResources.end());
 			auto resource = it->get();
-			bool found = eraseFromTree(*resource);
-			assert(found);
+
+			// Erase it from the tree
+			eraseFromTree(*resource);
+
+			// Recursively remove all its embedded objects by traversing the properties of the resource
+			auto type = resource->get_type();
+			for (auto& property : type.get_properties())
+			{
+				auto propertyValue = property.get_value(*resource);
+				auto propertyType = property.get_type();
+				// Check if the property is an embedded object
+				bool embeddedPointer = rtti::hasFlag(property, nap::rtti::EPropertyMetaData::Embedded);
+				if (embeddedPointer)
+				{
+					// If it is an object pointer and if it is set, remove the object
+					if (propertyType.is_derived_from<rtti::ObjectPtrBase>())
+					{
+						rtti::Object* embeddedObject = propertyValue.get_value<rtti::ObjectPtr<rtti::Object>>().get();
+						if (embeddedObject != nullptr)
+							removeResource(embeddedObject->mID);
+					}
+					// If it is an array of objects, remove all elements
+					else if (propertyType.is_array())
+					{
+						auto array = propertyValue.create_array_view();
+						for (auto i = 0; i < array.get_size(); ++i)
+						{
+							auto element = array.get_value(i);
+							auto elementType = element.get_type();
+							if (elementType.is_derived_from<rtti::ObjectPtrBase>())
+							{
+								rtti::Object* embeddedObject = element.get_value<rtti::ObjectPtr<rtti::Object>>().get();
+								if (embeddedObject != nullptr)
+									removeResource(embeddedObject->mID);
+							}
+						}
+
+					}
+				}
+			}
+
+			// Finally remove the resource itself
 			mResources.erase(it);
 		}
 
@@ -330,7 +371,13 @@ namespace nap
 					{
 						rtti::ResolvedPath path;
 						if (unresolvedPointer.mRTTIPath.resolve(unresolvedPointer.mObject, path))
-							embeddedPointerFound = rtti::hasFlag(path.getProperty(), nap::rtti::EPropertyMetaData::Embedded);
+						{
+							if (rtti::hasFlag(path.getProperty(), nap::rtti::EPropertyMetaData::Embedded))
+							{
+								embeddedPointerFound = true;
+								break;
+							}
+						}
 						else {
 							errorState.fail("Failed to resolve pointer: %s", unresolvedPointer.mRTTIPath.toString().c_str());
 							return false;

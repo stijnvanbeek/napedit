@@ -34,7 +34,7 @@ namespace nap
         std::vector<ResourcePtr<TestResource>> mPointerVector;
         std::vector<ResourcePtr<TestResource>> mEmbeddedPointerVector;
         std::vector<TestStruct> mObjectVector;
-        std::array<int, 100> mArray;
+        std::array<int, 4> mArray;
 
     private:
     };
