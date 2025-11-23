@@ -1,17 +1,6 @@
 {
     "Objects": [
         {
-            "Type": "nap::Entity",
-            "mID": "Entity",
-            "Components": [
-                {
-                    "Type": "nap::CameraComponent",
-                    "mID": "CameraComponent"
-                }
-            ],
-            "Children": []
-        },
-        {
             "Type": "nap::RenderLayer",
             "mID": "RenderLayer",
             "Name": ""
@@ -109,6 +98,7 @@
                             "Borders": false,
                             "Resizable": true,
                             "RelativeSizes": true,
+                            "SplitterSize": 7.0,
                             "Content": [
                                 {
                                     "Type": "nap::gui::Panel",
@@ -149,7 +139,7 @@
                                         "y": 0.0
                                     },
                                     "Size": {
-                                        "x": -8.0,
+                                        "x": 0.0,
                                         "y": 0.0
                                     },
                                     "Flags": {
