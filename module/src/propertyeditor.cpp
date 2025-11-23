@@ -80,6 +80,7 @@ namespace nap
             {
                 value.x = float2[0];
                 value.y = float2[1];
+                var = value;
                 return true;
             }
             return false;
@@ -96,6 +97,7 @@ namespace nap
                 value.x = float3[0];
                 value.y = float3[1];
                 value.z = float3[2];
+                var = value;
                 return true;
             }
             return false;
@@ -113,6 +115,7 @@ namespace nap
                 value.y = float4[1];
                 value.z = float4[2];
                 value.w = float4[3];
+                var = value;
                 return true;
             }
             return false;
