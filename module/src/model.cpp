@@ -8,6 +8,8 @@
 #include <rtti/defaultlinkresolver.h>
 #include <rtti/jsonreader.h>
 
+#include "nap/logger.h"
+
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::Model)
 	RTTI_CONSTRUCTOR(nap::Core&)
 RTTI_END_CLASS
@@ -44,6 +46,11 @@ namespace nap
 				if (mCore.getResourceManager()->getFactory().canCreate(resource))
 					if (mGroupTypes.find(resource.get_name().to_string()) == mGroupTypes.end())
 						mResourceTypes[resource.get_name().to_string()] = &resource;
+
+			mPreResourcesLoadedSlot.setFunction([this](){ onPreResourcesLoaded(); });
+			mPostResourcesLoadedSlot.setFunction([this](){ onPostResourcesLoaded(); });
+			mCore.getResourceManager()->mPreResourcesLoadedSignal.connect(mPreResourcesLoadedSlot);
+			mCore.getResourceManager()->mPostResourcesLoadedSignal.connect(mPostResourcesLoadedSlot);
 
 			return true;
 		}
@@ -313,41 +320,40 @@ namespace nap
 			mTree.mResources.clear();
 			mTree.mGroups.clear();
 			mTree.mEntities.clear();
+			mClearedSignal.trigger();
 		}
 
 
-		bool Model::saveToFile(const std::string &filename, utility::ErrorState &errorState)
+		bool Model::serialize(std::string &output, utility::ErrorState &errorState)
 		{
 			std::vector<Object*> objects;
-			for (auto& resource : mResources)
+			for (auto& resource : mTree.mGroups)
 				objects.emplace_back(resource.get());
+			for (auto& resource : mTree.mResources)
+				objects.emplace_back(resource.get());
+			for (auto& resource : mTree.mEntities)
+				objects.emplace_back(resource.get());
+
 			rtti::JSONWriter writer;
 			if (serializeObjects(objects, writer, errorState))
 			{
-				utility::writeStringToFile(filename, writer.GetJSON());
+				output = writer.GetJSON();
 				return true;
 			}
-			return false;
+			else
+				return false;
 		}
 
 
-		bool Model::loadFromFile(const std::string &filename, utility::ErrorState &errorState)
+		bool Model::deserialize(const std::string &input, utility::ErrorState &errorState)
 		{
-			if (!utility::fileExists(filename))
-			{
-				errorState.fail("File not found: %s", filename.c_str());
-				return false;
-			}
 			rtti::DeserializeResult result;
-			if (!rtti::deserializeJSONFile(filename, rtti::EPropertyValidationMode::AllowMissingProperties, rtti::EPointerPropertyMode::NoRawPointers, mCore.getResourceManager()->getFactory(), result, errorState))
-			{
-				errorState.fail("Failed to load file: %s", filename.c_str());
+			if (!rtti::deserializeJSON(input, rtti::EPropertyValidationMode::AllowMissingProperties, rtti::EPointerPropertyMode::NoRawPointers, mCore.getResourceManager()->getFactory(), result, errorState))
 				return false;
-			}
 
 			if (!rtti::DefaultLinkResolver::sResolveLinks(result.mReadObjects, result.mUnresolvedPointers, errorState))
 			{
-				errorState.fail("Failed to resolve links in file: %s", filename.c_str());
+				errorState.fail("Failed to resolve links.");
 				return false;
 			}
 
@@ -426,6 +432,33 @@ namespace nap
 				}
 			}
 
+			return true;
+		}
+
+
+		bool Model::loadFromFile(const std::string &path, utility::ErrorState &errorState)
+		{
+			if (!utility::fileExists(path))
+			{
+				errorState.fail("File not found: %s", path.c_str());
+				return false;
+			}
+			std::string jsonString;
+			if (!utility::readFileToString(path, jsonString, errorState))
+			{
+				errorState.fail("Failed to read file: %s", path.c_str());
+				return false;
+			}
+			return deserialize(jsonString, errorState);
+		}
+
+
+		bool Model::saveToFile(const std::string &path, utility::ErrorState &errorState)
+		{
+			std::string jsonString;
+			if (!serialize(jsonString, errorState))
+				return false;
+			utility::writeStringToFile(path, jsonString);
 			return true;
 		}
 
@@ -515,6 +548,27 @@ namespace nap
 				idCounter++;
 			}
 			return mID;
+		}
+
+
+		void Model::onPreResourcesLoaded()
+		{
+			// The model needs to be serialized and cleared before the resources are loaded, in order to rebuild it after the resources are loaded
+			// This is because the ObjectPtrManager patches all ObjectPtrs, which is undesirable for the ObjectPtrs that are part of the model
+			utility::ErrorState errorState;
+			if (!serialize(mSerializedData, errorState))
+				nap::Logger::warn("Failed to serialize model: %s", errorState.toString().c_str());
+			// clear();
+		}
+
+
+		void Model::onPostResourcesLoaded()
+		{
+			// The model needs to be rebuilt from a serialized version of itself, after the resources are loaded
+			utility::ErrorState errorState;
+			if (!deserialize(mSerializedData, errorState))
+				nap::Logger::warn("Failed to deserialize model: %s", errorState.toString().c_str());
+			mSerializedData.clear();
 		}
 
 

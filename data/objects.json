@@ -13,7 +13,7 @@
             "Visible": true,
             "AlwaysOnTop": false,
             "SampleShading": true,
-            "Title": "Example Window",
+            "Title": "NAPCreator",
             "Width": 1280,
             "Height": 720,
             "Mode": "Immediate",
@@ -61,7 +61,7 @@
                         "HorizontalScrollBar": false,
                         "CanClose": true
                     },
-                    "Alpha": 1.0,
+                    "Alpha": 0.10000000149011612,
                     "Open": true,
                     "Border": true,
                     "RenderWindow": "Window",
@@ -83,7 +83,7 @@
                             "NoScrollWithMouse": false,
                             "HorizontalScrollBar": false
                         },
-                        "Alpha": 1.0,
+                        "Alpha": 0.10000000149011612,
                         "Border": true,
                         "TitleBar": false,
                         "Content": {
@@ -118,7 +118,7 @@
                                         "NoScrollWithMouse": false,
                                         "HorizontalScrollBar": false
                                     },
-                                    "Alpha": 1.0,
+                                    "Alpha": 0.10000000149011612,
                                     "Border": true,
                                     "TitleBar": true,
                                     "Content": {
@@ -147,7 +147,7 @@
                                         "NoScrollWithMouse": false,
                                         "HorizontalScrollBar": false
                                     },
-                                    "Alpha": 1.0,
+                                    "Alpha": 0.10000000149011612,
                                     "Border": true,
                                     "TitleBar": true,
                                     "Content": {

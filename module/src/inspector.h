@@ -83,16 +83,21 @@
             template <typename T>
             void insertArrayElement(T element);
 
+            Slot<> mPostResourcesLoadedSlot;
+            void onPostResourcesLoaded();
+
             std::string mInspectedResourceID;
-            Resource* mInspectedResource = nullptr;
+            ResourcePtr<Resource> mInspectedResource;
             Selection mSelection;
             FilteredMenu mFilteredMenu;
             bool mOpenResourceMenu = false;
             bool mOpenResourceTypeMenu = false;
             IMGuiService* mGuiService = nullptr;
-            Model* mModel = nullptr;
+            ResourcePtr<Model> mModel;
 
             std::map<const rtti::TypeInfo, std::unique_ptr<IPropertyEditor>> mPropertyEditors;
+
+            Core& mCore;
         };
 
 
@@ -106,7 +111,7 @@
             mSelection.getResolvedPath().setValue(array);
             auto arrayPath = mSelection.getPath();
             arrayPath.popBack();
-            mSelection.set(arrayPath, mSelection.getArrayIndex(), mInspectedResource);
+            mSelection.set(arrayPath, mSelection.getArrayIndex(), mInspectedResource.get());
         }
 
 

@@ -35,7 +35,7 @@ namespace nap
             void onSaveAsAction(gui::Action&);
 
             std::string mPath;
-            Model* mModel = nullptr;
+            ResourcePtr<Model> mModel;
         };
     
     }

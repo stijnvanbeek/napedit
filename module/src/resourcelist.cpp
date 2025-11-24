@@ -26,7 +26,7 @@ namespace nap
 
 		bool ResourceList::init(utility::ErrorState &errorState)
 		{
-			mModel = mSelector->mModel.get();
+			mModel = mSelector->mModel;
 			return true;
 		}
 
@@ -46,6 +46,7 @@ namespace nap
 			ImGui::PopStyleColor();
 
 			// List of all resources
+			ImGui::SetNextWindowBgAlpha(0.1f);
 			ImGui::BeginChild("##ResourcesListBox", ImVec2(0, 0), true);
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + mLayoutConstants->listOffset());
 
@@ -114,7 +115,7 @@ namespace nap
 
 			// Popup context menu on right click
 			std::string chosenPopup;
-			ImGui::SetNextWindowBgAlpha(0.5f);
+			ImGui::SetNextWindowBgAlpha(0.1f);
 			if (ImGui::BeginPopupContextItem("##ResourcesListPopupContextItem", ImGuiMouseButton_Right))
 			{
 				IGroup *selectedGroup = nullptr;

@@ -149,15 +149,13 @@ namespace nap
              */
             void clear();
 
-            /**
-             * Saves current data model to a json file.
-             * @param filename Path to the json file.
-             * @param errorState Logs errors during serialization
-             * @return true on success
-             */
-            bool saveToFile(const std::string& filenamem, utility::ErrorState &errorState);
+            bool serialize(std::string& output, utility::ErrorState &errorState);
+            bool deserialize(const std::string& input, utility::ErrorState &errorState);
 
-            bool loadFromFile(const std::string& filename, utility::ErrorState &errorState);
+            bool loadFromFile(const std::string& path, utility::ErrorState &errorState);
+            bool saveToFile(const std::string& path, utility::ErrorState &errorState);
+
+            Signal<> mClearedSignal;
 
         private:
             bool eraseFromTree(std::vector<ResourcePtr<Resource>>& branch, Object& resource);
@@ -167,6 +165,12 @@ namespace nap
 
             std::string getUniqueID(const std::string& baseID);
 
+            Slot<> mPreResourcesLoadedSlot;
+            void onPreResourcesLoaded();
+
+            Slot<> mPostResourcesLoadedSlot;
+            void onPostResourcesLoaded();
+
         	std::vector<std::unique_ptr<Resource>> mResources;
             Tree mTree;
 
@@ -174,6 +178,7 @@ namespace nap
             std::map<std::string, const rtti::TypeInfo*> mGroupTypes;
 
             Core& mCore;
+            std::string mSerializedData;
         };
 
 

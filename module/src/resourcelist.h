@@ -67,7 +67,7 @@ namespace nap
             bool mEntitiesNodeSelected = false;
 
             Core& mCore;
-            Model* mModel = nullptr;
+            ResourcePtr<Model> mModel;
             IMGuiService* mGuiService = nullptr;
         };
 

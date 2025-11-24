@@ -17,7 +17,7 @@ namespace nap
     namespace edit
     {
 
-        Inspector::Inspector(Core& core) : mSelection()
+        Inspector::Inspector(Core& core) : mSelection(), mCore(core)
         {
             mGuiService = core.getService<IMGuiService>();
         }
@@ -35,6 +35,9 @@ namespace nap
                     auto editor = editorType.create<IPropertyEditor>();
                     mPropertyEditors[editor->getType()] = std::unique_ptr<IPropertyEditor>(editor);
                 }
+
+            mPostResourcesLoadedSlot.setFunction([this](){ onPostResourcesLoaded(); });
+            mCore.getResourceManager()->mPostResourcesLoadedSignal.connect(mPostResourcesLoadedSlot);
 
             return true;
         }
@@ -61,7 +64,7 @@ namespace nap
             if (mResourceSelector->empty())
                 return;
 
-            ImGui::SetNextWindowBgAlpha(0.3);
+            ImGui::SetNextWindowBgAlpha(0.1);
             ImGui::BeginChild("##InspectorChild", ImVec2(0, 0), true);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + mLayoutConstants->listOffset());
 
@@ -228,9 +231,9 @@ namespace nap
             if (Selectable(name.c_str(), selected, valueOffset - ImGui::GetCursorPosX() - mLayoutConstants->valueSpacing()))
             {
                 if (isArrayElement)
-                    mSelection.set(parentPath, arrayIndex, mInspectedResource);
+                    mSelection.set(parentPath, arrayIndex, mInspectedResource.get());
                 else
-                    mSelection.set(path, mInspectedResource);
+                    mSelection.set(path, mInspectedResource.get());
             }
             ImGui::SameLine();
 
@@ -367,7 +370,7 @@ namespace nap
                     label = "Create##" + path.toString() + name;
                     if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
-                        mSelection.set(path, mInspectedResource);
+                        mSelection.set(path, mInspectedResource.get());
                         createEmbeddedObject(type);
                     }
                 }
@@ -375,7 +378,7 @@ namespace nap
                     label = "Remove##" + path.toString() + name;
                     if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
-                        mSelection.set(path, mInspectedResource);
+                        mSelection.set(path, mInspectedResource.get());
                         mModel->removeEmbeddedObject(resource->mID);
                         mSelection.getResolvedPath().setValue(nullptr);
                     }
@@ -387,7 +390,7 @@ namespace nap
                     label = "Set##" + path.toString() + name;
                     if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
-                        mSelection.set(path, mInspectedResource);
+                        mSelection.set(path, mInspectedResource.get());
                         choosePointer(type);
                     }
                 }
@@ -395,7 +398,7 @@ namespace nap
                     label = "Clear##" + path.toString() + name;
                     if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
-                        mSelection.set(path, mInspectedResource);
+                        mSelection.set(path, mInspectedResource.get());
                         mSelection.getResolvedPath().setValue(nullptr);
                     }
                 }
@@ -465,7 +468,7 @@ namespace nap
             mSelection.getResolvedPath().setValue(array);
             auto arrayPath = mSelection.getPath();
             arrayPath.popBack();
-            mSelection.set(arrayPath, mSelection.getArrayIndex() - 1, mInspectedResource);
+            mSelection.set(arrayPath, mSelection.getArrayIndex() - 1, mInspectedResource.get());
         }
 
 
@@ -479,7 +482,7 @@ namespace nap
             mSelection.getResolvedPath().setValue(array);
             auto arrayPath = mSelection.getPath();
             arrayPath.popBack();
-            mSelection.set(arrayPath, mSelection.getArrayIndex() + 1, mInspectedResource);
+            mSelection.set(arrayPath, mSelection.getArrayIndex() + 1, mInspectedResource.get());
         }
 
 
@@ -540,6 +543,17 @@ namespace nap
                     menuItems.push_back(pair.first);
             mFilteredMenu.init(std::move(menuItems));
             mOpenResourceTypeMenu = true;
+        }
+
+
+        void Inspector::onPostResourcesLoaded()
+        {
+            if (!mInspectedResourceID.empty())
+            {
+                mInspectedResource = mModel->findResource(mInspectedResourceID);
+                assert(mInspectedResource != nullptr);
+                mSelection.clear();
+            }
         }
 
 

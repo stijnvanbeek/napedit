@@ -20,7 +20,7 @@ namespace nap
 
         bool ActionController::init(utility::ErrorState& errorState)
         {
-            mModel = mSelector->mModel.get();
+            mModel = mSelector->mModel;
             mNewAction->performSignal.connect(mNewActionSlot);
             mOpenAction->performSignal.connect(mOpenActionSlot);
             mSaveAction->performSignal.connect(mSaveActionSlot);
