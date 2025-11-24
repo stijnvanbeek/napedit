@@ -1,0 +1,10 @@
+{
+  "Data" : "/Users/stijn/Documents/GitHub/nap/modules/napedit/demo/napcreator/data/objects.json",
+  "PathMapping" : "app_install_data/napcreator/path_mapping.json",
+  "RequiredModules" : [ "napedit", "napapp", "napnativefiledialog" ],
+  "ServiceConfig" : "",
+  "Title" : "napcreator",
+  "Type" : "nap::ProjectInfo",
+  "Version" : "1.0.0",
+  "mID" : "ProjectInfo"
+}

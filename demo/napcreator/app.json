@@ -1,13 +1,13 @@
 {
     "Type": "nap::ProjectInfo",
     "mID": "ProjectInfo",
-    "Title": "napkin2",
+    "Title": "napcreator",
     "Version": "1.0.0",
     "Data": "data/objects.json",
     "PathMapping": "cache/path_mapping.json",
     "ServiceConfig": "",
     "RequiredModules": [
-        "napnapkin2",
+        "napedit",
         "napapp",
         "napnativefiledialog"
     ]
