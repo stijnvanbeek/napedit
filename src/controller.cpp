@@ -16,7 +16,7 @@ namespace nap
                 return false;
             if (oldID == newID)
                 return false;
-            if (mModel->findResource(newID) == nullptr)
+            if (mModel->findResource(newID) != nullptr)
                 return false;
             mModel->renameResource(oldID, newID);
             addUndoStack(

@@ -356,6 +356,25 @@
                                     "Action": "QuitAction"
                                 }
                             ]
+                        },
+                        {
+                            "Type": "nap::gui::Menu",
+                            "mID": "menuEdit",
+                            "Title": "Edit",
+                            "Items": [
+                                {
+                                    "Type": "nap::gui::MenuItem",
+                                    "mID": "menuUndo",
+                                    "Title": "Undo",
+                                    "Action": "UndoAction"
+                                },
+                                {
+                                    "Type": "nap::gui::MenuItem",
+                                    "mID": "menuRedo",
+                                    "Title": "Redo",
+                                    "Action": "RedoAction"
+                                }
+                            ]
                         }
                     ]
                 }
@@ -438,14 +457,16 @@
                             "KeyModifier": "Ctrl"
                         },
                         {
-                            "Type": "nap::edit::ActionController",
-                            "mID": "ActionController",
-                            "Selector": "Selector",
-                            "Controller": "Controller",
-                            "NewAction": "NewAction",
-                            "OpenAction": "OpenAction",
-                            "SaveAction": "SaveAction",
-                            "SaveAsAction": "SaveAsAction"
+                            "Type": "nap::gui::Action",
+                            "mID": "UndoAction",
+                            "Key": "Z",
+                            "KeyModifier": "Ctrl"
+                        },
+                        {
+                            "Type": "nap::gui::Action",
+                            "mID": "RedoAction",
+                            "Key": "R",
+                            "KeyModifier": "Ctrl"
                         }
                     ],
                     "Children": []
@@ -458,17 +479,30 @@
             "Entities": []
         },
         {
+            "Type": "nap::edit::ActionController",
+            "mID": "ActionController",
+            "Selector": "Selector",
+            "Controller": "Controller",
+            "NewAction": "NewAction",
+            "OpenAction": "OpenAction",
+            "SaveAction": "SaveAction",
+            "SaveAsAction": "SaveAsAction",
+            "QuitAction": "QuitAction",
+            "UndoAction": "UndoAction",
+            "RedoAction": "RedoAction"
+        },
+        {
+            "Type": "nap::edit::Controller",
+            "mID": "Controller",
+            "Model": "Model"
+        },
+        {
             "Type": "nap::edit::Model",
             "mID": "Model"
         },
         {
             "Type": "nap::edit::Selector",
             "mID": "Selector",
-            "Model": "Model"
-        },
-        {
-            "Type": "nap::edit::Controller",
-            "mID": "Controller",
             "Model": "Model"
         }
     ]

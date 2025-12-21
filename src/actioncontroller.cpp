@@ -10,6 +10,9 @@ RTTI_BEGIN_CLASS(nap::edit::ActionController)
     RTTI_PROPERTY("OpenAction", &nap::edit::ActionController::mOpenAction, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("SaveAction", &nap::edit::ActionController::mSaveAction, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("SaveAsAction", &nap::edit::ActionController::mSaveAsAction, nap::rtti::EPropertyMetaData::Required)
+    RTTI_PROPERTY("QuitAction", &nap::edit::ActionController::mQuitAction, nap::rtti::EPropertyMetaData::Default)
+    RTTI_PROPERTY("UndoAction", &nap::edit::ActionController::mUndoAction, nap::rtti::EPropertyMetaData::Default)
+    RTTI_PROPERTY("RedoAction", &nap::edit::ActionController::mRedoAction, nap::rtti::EPropertyMetaData::Default)
 RTTI_END_CLASS
 
 
@@ -26,6 +29,9 @@ namespace nap
             mOpenAction->performSignal.connect(mOpenActionSlot);
             mSaveAction->performSignal.connect(mSaveActionSlot);
             mSaveAsAction->performSignal.connect(mSaveAsActionSlot);
+            mQuitAction->performSignal.connect(mQuitActionSlot);
+            mUndoAction->performSignal.connect(mUndoActionSlot);
+            mRedoAction->performSignal.connect(mRedoActionSlot);
             return true;
         }
 
