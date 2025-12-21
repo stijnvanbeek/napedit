@@ -5,6 +5,7 @@
 
 RTTI_BEGIN_CLASS(nap::edit::ActionController)
     RTTI_PROPERTY("Selector", &nap::edit::ActionController::mSelector, nap::rtti::EPropertyMetaData::Required)
+    RTTI_PROPERTY("Controller", &nap::edit::ActionController::mController, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("NewAction", &nap::edit::ActionController::mNewAction, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("OpenAction", &nap::edit::ActionController::mOpenAction, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("SaveAction", &nap::edit::ActionController::mSaveAction, nap::rtti::EPropertyMetaData::Required)
@@ -57,7 +58,6 @@ namespace nap
             utility::ErrorState errorState;
             if (!mModel->saveToFile(mPath, errorState))
                 Logger::error(errorState.toString().c_str());
-
         }
 
 
@@ -70,7 +70,25 @@ namespace nap
                     Logger::error(errorState.toString().c_str());
             }
         }
-    
+
+
+        void ActionController::onQuitAction(gui::Action &)
+        {
+            mQuitting = true;
+        }
+
+
+        void ActionController::onUndoAction(gui::Action &)
+        {
+            mController->undo();
+        }
+
+
+        void ActionController::onRedoAction(gui::Action &)
+        {
+            mController->redo();
+        }
+
     }
 
 }

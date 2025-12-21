@@ -1,6 +1,6 @@
 #pragma once
 
-#include <model.h>
+#include <actioncontroller.h>
 
 #include <Gui/Window.h>
 
@@ -74,7 +74,7 @@ namespace nap
         int shutdown() override;
 
     private:
-    	ResourcePtr<edit::Model> mModel = nullptr;
+    	ResourcePtr<edit::ActionController> mActionController = nullptr;
     	ResourcePtr<gui::GuiWindow> mWindow = nullptr;
 
         ResourceManager*			mResourceManager = nullptr;		///< Manages all the loaded data

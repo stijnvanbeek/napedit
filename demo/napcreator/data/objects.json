@@ -169,6 +169,7 @@
                     "Title": "",
                     "Style": "",
                     "Selector": "Selector",
+                    "Controller": "Controller",
                     "LayoutConstants": "LayoutConstants",
                     "ResourceIcon": "ResourceIcon",
                     "GroupIcon": "GroupIcon",
@@ -440,6 +441,7 @@
                             "Type": "nap::edit::ActionController",
                             "mID": "ActionController",
                             "Selector": "Selector",
+                            "Controller": "Controller",
                             "NewAction": "NewAction",
                             "OpenAction": "OpenAction",
                             "SaveAction": "SaveAction",
@@ -462,6 +464,11 @@
         {
             "Type": "nap::edit::Selector",
             "mID": "Selector",
+            "Model": "Model"
+        },
+        {
+            "Type": "nap::edit::Controller",
+            "mID": "Controller",
             "Model": "Model"
         }
     ]

@@ -33,8 +33,8 @@ namespace nap
 		if (!error.check(mScene != nullptr, "unable to find scene with name: %s", "Scene"))
 			return false;
 
-		mModel = mResourceManager->findObject<edit::Model>("Model");
-		if (!error.check(mModel != nullptr, "unable to find Model with name: %s", "Scene"))
+		mActionController = mResourceManager->findObject<edit::ActionController>("ActionController");
+		if (!error.check(mActionController != nullptr, "Unable to find ActionController"))
 			return false;
 
 		mWindow = mResourceManager->findObject<gui::GuiWindow>("MainWindow");
@@ -111,6 +111,9 @@ namespace nap
 		mInputService->processWindowEvents(*mRenderWindow, input_router, { &mScene->getRootEntity() });
 
 		mWindow->show();
+
+		if (mActionController->isQuitting())
+			quit();
 	}
 
 }

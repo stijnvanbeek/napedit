@@ -216,16 +216,29 @@ namespace nap
 		}
 
 
-		void Model::moveEntityToParent(const std::string &entityID, const std::string &parentID)
+		void Model::addEntityToParent(const std::string &entityID, const std::string &parentID)
 		{
 			auto entity = findResource<Entity>(entityID);
 			assert(entity != nullptr);
-			auto found = eraseFromTree(*entity);
-			assert(found);
 			auto parent = findResource<Entity>(parentID);
 			if (parent != nullptr)
 			{
 				parent->mChildren.emplace_back(entity);
+			}
+		}
+
+
+		void Model::removeEntityFromParent(const std::string &entityID, const std::string &parentID)
+		{
+			auto entity = findResource<Entity>(entityID);
+			assert(entity != nullptr);
+			auto parent = findResource<Entity>(parentID);
+			assert(parent != nullptr);
+			if (parent != nullptr)
+			{
+				auto it = std::find_if(parent->mChildren.begin(), parent->mChildren.end(), [&](auto& child){ return child->mID == entityID; });
+				if (it != parent->mChildren.end())
+					parent->mChildren.erase(it);
 			}
 		}
 

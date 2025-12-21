@@ -11,6 +11,8 @@
 #include "imgui_internal.h"
 #include <imguiservice.h>
 
+#include "controller.h"
+
 namespace nap
 {
 	namespace edit
@@ -28,6 +30,7 @@ namespace nap
 			ResourceList(Core& core);
 
 			ResourcePtr<Selector> mSelector; ///< Property: 'Selector' Link to Selector resource to keep track of the selected object
+			ResourcePtr<Controller> mController; ///< Property: 'Controller' Link to the Controller resource that controls the editing of the model.
 			ResourcePtr<LayoutConstants> mLayoutConstants; ///< Property: 'LayoutConstants' Link to a set of values used to layout the gui.
 
 			ResourcePtr<Texture2D> mEntityIcon; ///< Property: 'EntityIcon' Icon showed at the entity main tree node.
@@ -77,7 +80,7 @@ namespace nap
 			float mTypeColumnOffset = 0.f; // Horizontal offset of the type column.
 			float mNameColumnOffset = 0.f; // Horizontal offset of the name column.
 
-			FilteredMenu mResourceTypeMenu; // Menu used to select the type of a resource to create.
+			FilteredMenu mFilterMenu; // Menu used to select the type of a resource to create.
 
 			bool mStartEditing = false;
 			bool mResourcesNodeSelected = false;

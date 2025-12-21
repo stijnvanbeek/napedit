@@ -85,9 +85,33 @@ namespace nap
              */
             void removeEmbeddedObject(const std::string& mID = "");
 
+            /**
+             * Add existing resource to a group and move it in the tree accordingly.
+             * @param mID ID of the resource to add to the group.
+             * @param groupID ID of the group to add the resource to.
+             */
             void moveResourceToGroup(const std::string& mID, const std::string& groupID);
+
+            /**
+             * Move a group or entity to a new parent and move it in the tree accordingly.
+             * @param groupID ID of the group or entity to move.
+             * @param parentGroupID ID of the new parent group or entity.
+             */
             void moveGroupToParent(const std::string& groupID, const std::string& parentGroupID);
-            void moveEntityToParent(const std::string& entityID, const std::string& parentID);
+
+            /**
+             * Add an entity to another entity's children.
+             * @param entityID ID of the entity to add as a child.
+             * @param parentID ID of the parent entity.
+             */
+            void addEntityToParent(const std::string& entityID, const std::string& parentID);
+
+            /**
+             * Remove an entity from its parent.
+             * @param entityID ID of the entity to remove.
+             * @param parentID ID of the parent entity.
+             */
+            void removeEntityFromParent(const std::string& entityID, const std::string& parentID);
 
             /**
              * Remove a resource, also deletes it from the tree.

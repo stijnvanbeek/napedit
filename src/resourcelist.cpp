@@ -6,6 +6,7 @@
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::ResourceList)
 	RTTI_CONSTRUCTOR(nap::Core&)
 	RTTI_PROPERTY("Selector", &nap::edit::ResourceList::mSelector, nap::rtti::EPropertyMetaData::Required)
+	RTTI_PROPERTY("Controller", &nap::edit::ResourceList::mController, nap::rtti::EPropertyMetaData::Required)
 	RTTI_PROPERTY("LayoutConstants", &nap::edit::ResourceList::mLayoutConstants, nap::rtti::EPropertyMetaData::Required)
 	RTTI_PROPERTY("ResourceIcon", &nap::edit::ResourceList::mResourceIcon, nap::rtti::EPropertyMetaData::Required)
 	RTTI_PROPERTY("GroupIcon", &nap::edit::ResourceList::mGroupIcon, nap::rtti::EPropertyMetaData::Required)
@@ -118,11 +119,8 @@ namespace nap
 				mEnteredID = mRenameBuffer;
 			if (!mEnteredID.empty())
 			{
-				if (mEnteredID != mSelector->get() && mModel->findResource(mEnteredID) == nullptr)
-				{
-					mModel->renameResource(mSelector->get(), mEnteredID);
+				if (mController->renameResource(mSelector->get(), mEnteredID))
 					mSelector->set(mEnteredID);
-				}
 				mEnteredID.clear();
 				mEditedID.clear();
 			}
@@ -150,7 +148,7 @@ namespace nap
 						std::vector<std::string> menuItems;
 						for (auto& pair : mModel->getResourceTypes())
 							menuItems.push_back(pair.first);
-						mResourceTypeMenu.init(std::move(menuItems));
+						mFilterMenu.init(std::move(menuItems));
 						chosenPopup = "##AddResourcePopup";
 					}
 
@@ -162,14 +160,14 @@ namespace nap
 						if (selectedGroup != nullptr)
 						{
 							auto type = selectedGroup->get_type();
-							mModel->createGroup(type);
+							mController->createGroup(type);
 							mSelector->clear();
 						} else
 						{
 							std::vector<std::string> menuItems;
 							for (auto& pair : mModel->getGroupTypes())
 								menuItems.push_back(pair.first);
-							mResourceTypeMenu.init(std::move(menuItems));
+							mFilterMenu.init(std::move(menuItems));
 							chosenPopup = "##AddGroupPopup";
 						}
 					}
@@ -181,7 +179,7 @@ namespace nap
 					Icon(*mEntityIcon, mGuiService);
 					ImGui::SameLine();
 					if (ImGui::Selectable("Create Entity..."))
-						mModel->createEntity();
+						mController->createEntity();
 				}
 
 				// When a group is selected
@@ -197,7 +195,7 @@ namespace nap
 						for (auto& pair : mModel->getResourceTypes())
 							if (pair.second->is_derived_from(type))
 								menuItems.push_back(pair.first);
-						mResourceTypeMenu.init(std::move(menuItems));
+						mFilterMenu.init(std::move(menuItems));
 						chosenPopup = "##AddResourcePopup";
 					}
 					// Create child
@@ -205,8 +203,7 @@ namespace nap
 					ImGui::SameLine();
 					if (ImGui::Selectable("Create child..."))
 					{
-						auto mID = mModel->createGroup(selectedGroup->get_type());
-						mModel->moveGroupToParent(mID, mSelector->get());
+						mController->createGroup(selectedGroup->get_type());
 						mSelector->clear();
 					}
 				}
@@ -223,7 +220,7 @@ namespace nap
 						for (auto& pair : mModel->getResourceTypes())
 							if (pair.second->is_derived_from(RTTI_OF(Component)))
 								menuItems.push_back(pair.first);
-						mResourceTypeMenu.init(std::move(menuItems));
+						mFilterMenu.init(std::move(menuItems));
 						chosenPopup = "##AddComponentPopup";
 					}
 
@@ -238,7 +235,7 @@ namespace nap
 								entities.emplace_back(resource->mID);
 						if (!entities.empty())
 						{
-							mResourceTypeMenu.init(std::move(entities));
+							mFilterMenu.init(std::move(entities));
 							chosenPopup = "##AddChildEntityPopup";
 						}
 					}
@@ -254,7 +251,7 @@ namespace nap
 					}
 					if (ImGui::Selectable(std::string("Remove " + mSelector->get()).c_str()))
 					{
-						mModel->removeResource(mSelector->get());
+						mController->removeResource(mSelector->get());
 						mSelector->clear();
 					}
 				}
@@ -269,13 +266,11 @@ namespace nap
 			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopup("##AddResourcePopup"))
 			{
-				if (mResourceTypeMenu.show())
+				if (mFilterMenu.show())
 				{
-					auto typeName = mResourceTypeMenu.getSelectedItem();
+					auto typeName = mFilterMenu.getSelectedItem();
 					auto type = rtti::TypeInfo::get_by_name(typeName);
-					auto mID = mModel->createResource(type, typeName);
-					if (!mSelector->empty())
-						mModel->moveResourceToGroup(mID, mSelector->get());
+					mController->createResource(type, mSelector->get());
 					mSelector->clear();
 				}
 				ImGui::EndPopup();
@@ -284,13 +279,11 @@ namespace nap
 			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopup("##AddGroupPopup"))
 			{
-				if (mResourceTypeMenu.show())
+				if (mFilterMenu.show())
 				{
-					auto typeName = mResourceTypeMenu.getSelectedItem();
+					auto typeName = mFilterMenu.getSelectedItem();
 					auto type = rtti::TypeInfo::get_by_name(typeName);
-					auto mID = mModel->createGroup(type, typeName);
-					if (!mSelector->empty())
-						mModel->moveGroupToParent(mID, mSelector->get());
+					mController->createGroup(type, mSelector->get());
 					mSelector->clear();
 				}
 				ImGui::EndPopup();
@@ -299,11 +292,11 @@ namespace nap
 			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopup("##AddChildEntityPopup"))
 			{
-				if (mResourceTypeMenu.show())
+				if (mFilterMenu.show())
 				{
-					auto child = mResourceTypeMenu.getSelectedItem();
+					auto child = mFilterMenu.getSelectedItem();
 					if (!mSelector->empty())
-						mModel->moveEntityToParent(mSelector->get(), child);
+						mModel->addEntityToParent(child, mSelector->get());
 					mSelector->clear();
 				}
 				ImGui::EndPopup();
@@ -312,11 +305,11 @@ namespace nap
 			ImGui::SetNextWindowBgAlpha(0.5f);
 			if (ImGui::BeginPopup("##AddComponentPopup"))
 			{
-				if (mResourceTypeMenu.show())
+				if (mFilterMenu.show())
 				{
-					auto typeName = mResourceTypeMenu.getSelectedItem();
+					auto typeName = mFilterMenu.getSelectedItem();
 					auto type = rtti::TypeInfo::get_by_name(typeName);
-					auto mID = mModel->createComponent(type, mSelector->get());
+					mController->createComponent(type, mSelector->get());
 					mSelector->clear();
 				}
 				ImGui::EndPopup();
