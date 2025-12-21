@@ -8,6 +8,7 @@
 RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::edit::Inspector)
     RTTI_CONSTRUCTOR(nap::Core&)
     RTTI_PROPERTY("ResourceSelector", &nap::edit::Inspector::mResourceSelector, nap::rtti::EPropertyMetaData::Required)
+    RTTI_PROPERTY("Controller", &nap::edit::Inspector::mController, nap::rtti::EPropertyMetaData::Required)
     RTTI_PROPERTY("LayoutConstants", &nap::edit::Inspector::mLayoutConstants, nap::rtti::EPropertyMetaData::Required)
 RTTI_END_CLASS
 
@@ -100,7 +101,7 @@ namespace nap
                 {
                     auto resource = mModel->findResource(mFilteredMenu.getSelectedItem());
                     if (mSelection.isPointer())
-                        mSelection.getResolvedPath().setValue(resource);
+                        mController->setValue(mSelection, resource);
                     else if (mSelection.isArrayElement())
                         insertArrayElement(resource);
                     else if (mSelection.isArray())
@@ -140,7 +141,7 @@ namespace nap
         void Inspector::drawContextMenu()
         {
             // Popup context menu on right click
-            if (mSelection.isValid())
+            if (mSelection.isResolved())
             {
                 if (mSelection.isArrayElement())
                 {
@@ -554,27 +555,6 @@ namespace nap
                 assert(mInspectedResource != nullptr);
                 mSelection.clear();
             }
-        }
-
-
-        void Inspector::Selection::set(const rtti::Path &path, Resource *root)
-        {
-            mPath = path;
-            mIsArrayElement = false;
-            mIsValid = mPath.resolve(root, mResolvedPath);
-            assert(mIsValid);
-        }
-
-
-        void Inspector::Selection::set(const rtti::Path &arrayPath, int index, Resource *root)
-        {
-            mPath = arrayPath;
-            mIsArrayElement = true;
-            mArrayIndex = index;
-            mIsValid = mPath.resolve(root, mResolvedPath);
-            mPath.pushArrayElement(index);
-            assert(mIsValid);
-            assert(mResolvedPath.getType().is_array());
         }
 
 

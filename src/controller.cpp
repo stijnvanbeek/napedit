@@ -182,6 +182,63 @@ namespace nap
             mRedoStack.clear();
         }
 
+
+        Controller::ValuePath::ValuePath(const ValuePath &other) : mResolvedPath()
+        {
+            mPath = other.mPath;
+            mIsArrayElement = other.mIsArrayElement;
+            mArrayIndex = other.mArrayIndex;
+            mIsResolved = false;
+        }
+
+
+        Controller::ValuePath::ValuePath(ValuePath &&other) : mResolvedPath()
+        {
+            mPath = other.mPath;
+            mIsArrayElement = other.mIsArrayElement;
+            mArrayIndex = other.mArrayIndex;
+            mIsResolved = false;
+        }
+
+
+        void Controller::ValuePath::set(const rtti::Path &path, Resource *root)
+        {
+            mRootID = root->mID;
+            mPath = path;
+            mIsArrayElement = false;
+            resolve(root);
+        }
+
+
+        void Controller::ValuePath::set(const rtti::Path &arrayPath, int index, Resource *root)
+        {
+            mRootID = root->mID;
+            mPath = arrayPath;
+            mIsArrayElement = true;
+            mArrayIndex = index;
+            resolve(root);
+        }
+
+
+        void Controller::ValuePath::resolve(Resource* root)
+        {
+            mIsResolved = mPath.resolve(root, mResolvedPath);
+            if (mIsArrayElement)
+            {
+                mPath.pushArrayElement(mArrayIndex);
+                assert(mResolvedPath.getType().is_array());
+            }
+            assert(mIsResolved);
+        }
+
+
+        void Controller::ValuePath::resolve(Model& model)
+        {
+            auto root = model.findResource(mRootID);
+            assert(root != nullptr);
+            resolve(root);
+        }
+
     }
 
 }

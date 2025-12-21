@@ -1,6 +1,6 @@
 #pragma once
 
-#include <model.h>
+#include <controller.h>
 #include <propertyeditor.h>
 #include <filteredmenu.h>
 #include <layoutconstants.h>
@@ -22,6 +22,7 @@
             bool init(utility::ErrorState& errorState) override;
 
             ResourcePtr<Selector> mResourceSelector; ///< Property: 'ResourceSelector' Link to the Selector that selects a resource from the data model being edited.
+            ResourcePtr<Controller> mController;    ///< Property: 'Controller' Link to the Controller resource that controls the editing of the model.
             ResourcePtr<LayoutConstants> mLayoutConstants; ///< Property: 'LayoutConstants' Link to a set of values used to layout the gui.
 
             /**
@@ -34,30 +35,6 @@
                 auto editor = std::make_unique<T>();
                 mPropertyEditors[editor->getType()] = std::move(editor);
             }
-
-        private:
-            class Selection
-            {
-            public:
-                Selection() = default;
-                void set(const rtti::Path& path, Resource* root);
-                void set(const rtti::Path& arrayPath, int index, Resource* root);
-                void clear() { mIsValid = false; }
-                bool isValid() const { return mIsValid; }
-                bool isArrayElement() const { return mIsArrayElement; }
-                bool isArray() const { return mResolvedPath.getType().is_array(); }
-                int getArrayIndex() const { return mArrayIndex; }
-                bool isPointer() const { return mResolvedPath.getType().is_derived_from<rtti::ObjectPtrBase>(); }
-                rtti::ResolvedPath& getResolvedPath() { return mResolvedPath; }
-                const rtti::Path& getPath() const { return mPath; }
-
-            private:
-                rtti::Path mPath;
-                rtti::ResolvedPath mResolvedPath;
-                bool mIsArrayElement = false;
-                int mArrayIndex = -1;
-                bool mIsValid = false;
-            };
 
         private:
             void draw() override;
@@ -76,6 +53,7 @@
             void moveArrayElementUp();
             void moveArrayElementDown();
             void addArrayElement();
+
             void addArrayPtrElement(Resource* resource);
             void choosePointer(const rtti::TypeInfo& type);
             void createEmbeddedObject(const rtti::TypeInfo& type);
@@ -88,7 +66,7 @@
 
             std::string mInspectedResourceID;
             ResourcePtr<Resource> mInspectedResource;
-            Selection mSelection;
+            Controller::ValuePath mSelection;
             FilteredMenu mFilteredMenu;
             bool mOpenResourceMenu = false;
             bool mOpenResourceTypeMenu = false;
