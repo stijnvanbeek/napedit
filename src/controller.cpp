@@ -151,6 +151,190 @@ namespace nap
         }
 
 
+        void Controller::createEmbeddedObject(ValuePath &path, const rtti::TypeInfo &type)
+        {
+            auto resource = mModel->createEmbeddedObject(type);
+            assert(resource != nullptr);
+            auto mID = resource->mID;
+
+            if (path.isPointer())
+                path.getResolvedPath().setValue(resource);
+            else if (path.isArrayElement() || path.isArray())
+                doInsertArrayElement(path, resource);
+
+            addUndoStack(
+                [this, type, path, mID]() mutable
+                {
+                    auto resource = mModel->createEmbeddedObject(type, mID);
+                    if (path.isPointer())
+                        path.getResolvedPath().setValue(resource);
+                    else if (path.isArrayElement() || path.isArray())
+                        doInsertArrayElement(path, resource);
+                },
+                [this, path, mID]() mutable
+                {
+                    if (path.isPointer())
+                        path.getResolvedPath().setValue(nullptr);
+                    else if (path.isArrayElement() || path.isArray())
+                        doRemoveArrayElement(path);
+                    mModel->removeResource(mID);
+                }
+            );
+        }
+
+
+        void Controller::removeEmbeddedObject(ValuePath &path)
+        {
+            rtti::Object* resource = path.getResolvedPath().getValue().get_value<rtti::ObjectPtr<rtti::Object>>().get();
+            Resource* removed_object = mModel->removeEmbeddedObject(resource->mID).release();
+            assert(removed_object == resource);
+            path.getResolvedPath().setValue(nullptr);
+
+            addUndoStack(
+                [this, path, removed_object]() mutable
+                {
+                    path.getResolvedPath().setValue(removed_object);
+                    mModel->addEmbeddedObject(removed_object);
+                },
+                [this, path, removed_object]() mutable
+                {
+                    removed_object = mModel->removeEmbeddedObject(removed_object->mID).release();
+                    path.getResolvedPath().setValue(nullptr);
+                }
+            );
+        }
+
+
+        void Controller::insertArrayElement(ValuePath &path)
+        {
+            auto array = path.getResolvedPath().getValue();
+            auto view = array.create_array_view();
+            auto elementType = view.get_rank_type(1);
+            assert(elementType.can_create_instance());
+            auto element = elementType.create();
+
+            doInsertArrayElement(path, element);
+
+            addUndoStack(
+                [this, path, element]() mutable
+                {
+                    doInsertArrayElement(path, element);
+                },
+                [this, path]() mutable
+                {
+                    doRemoveArrayElement(path);
+                }
+            );
+        }
+
+
+        void Controller::removeArrayElement(ValuePath &path)
+        {
+            auto element = path.getResolvedPath().getValue();
+            doRemoveArrayElement(path);
+            addUndoStack(
+                [this, path]() mutable
+                {
+                    path.resolve(*mModel);
+                    doRemoveArrayElement(path);
+                },
+                [this, path, element]() mutable
+                {
+                    path.resolve(*mModel);
+                    doInsertArrayElement(path, element);
+                }
+            );
+        }
+
+
+        void Controller::moveArrayElementUp(ValuePath &path)
+        {
+            auto oldIndex = path.getArrayIndex();
+            auto newIndex = path.getArrayIndex() - 1;
+            if (!doMoveArrayElementUp(path))
+                return;
+            addUndoStack(
+                [this, path, oldIndex]() mutable
+                {
+                    path.set(oldIndex);
+                    doMoveArrayElementUp(path);
+                },
+                [this, path, newIndex]() mutable
+                {
+                    path.set(newIndex);
+                    doMoveArrayElementDown(path);
+                }
+            );
+        }
+
+
+        void Controller::moveArrayElementDown(ValuePath &path)
+        {
+            auto oldIndex = path.getArrayIndex();
+            auto newIndex = path.getArrayIndex() + 1;
+            if (!doMoveArrayElementDown(path))
+                return;
+            addUndoStack(
+                [this, path, oldIndex]() mutable
+                {
+                    path.set(oldIndex);
+                    doMoveArrayElementDown(path);
+                },
+                [this, path, newIndex]() mutable
+                {
+                    path.set(newIndex);
+                    doMoveArrayElementUp(path);
+                }
+            );
+        }
+
+
+        void Controller::doRemoveArrayElement(ValuePath &path)
+        {
+            auto array = path.getResolvedPath().getValue();
+            auto view = array.create_array_view();
+            if (path.isArrayElement())
+            {
+                view.remove_value(path.getArrayIndex());
+            }
+            else if (path.isArray())
+                view.remove_value(view.get_size() - 1);
+            path.getResolvedPath().setValue(array);
+        }
+
+
+        bool Controller::doMoveArrayElementUp(ValuePath &path)
+        {
+            if (path.getArrayIndex() < 1)
+                return false;
+            auto array = path.getResolvedPath().getValue();
+            auto view = array.create_array_view();
+            auto size = view.get_size();
+            assert(path.getArrayIndex() < size);
+            auto element = view.get_value(path.getArrayIndex());
+            view.remove_value(path.getArrayIndex());
+            view.insert_value(path.getArrayIndex() - 1, element);
+            path.getResolvedPath().setValue(array);
+            return true;
+        }
+
+
+        bool Controller::doMoveArrayElementDown(ValuePath &path)
+        {
+            auto array = path.getResolvedPath().getValue();
+            auto view = array.create_array_view();
+            auto size = view.get_size();
+            assert(path.getArrayIndex() < size);
+            if (path.getArrayIndex() == size - 1)
+                return false;
+            auto element = view.get_value(path.getArrayIndex());
+            view.remove_value(path.getArrayIndex());
+            view.insert_value(path.getArrayIndex() + 1, element);
+            path.getResolvedPath().setValue(array);
+            return true;
+        }
+
+
         void Controller::undo()
         {
             if (!mUndoStack.empty())
@@ -176,16 +360,44 @@ namespace nap
         void Controller::addUndoStack(std::function<void()> doFunction, std::function<void()> undoFunction)
         {
             auto command = std::make_unique<Command>();
-            command->mUndo = undoFunction;
-            command->mRedo = doFunction;
+            command->mUndo = std::move(undoFunction);
+            command->mRedo = std::move(doFunction);
             mUndoStack.emplace_back(std::move(command));
             mRedoStack.clear();
         }
 
 
+        template <>
+        void Controller::insertArrayElement(ValuePath& path, Resource* element)
+        {
+            assert(path.isArray());
+            assert(path.isResolved());
+
+            doInsertArrayElement(path, element);
+            auto mID = element->mID;
+            addUndoStack(
+                [this, path, mID]() mutable
+                {
+                    path.resolve(*mModel);
+                    auto element = mModel->findResource(mID);
+                    if (element != nullptr)
+                        doInsertArrayElement(path, element);
+                },
+                [this, path]() mutable
+                {
+                    path.resolve(*mModel);
+                    if (path.isResolved())
+                        doRemoveArrayElement(path);
+                }
+            );
+        }
+
+
         Controller::ValuePath::ValuePath(const ValuePath &other) : mResolvedPath()
         {
+            mRootID = other.mRootID;
             mPath = other.mPath;
+            mResolvedPath = other.mResolvedPath;
             mIsArrayElement = other.mIsArrayElement;
             mArrayIndex = other.mArrayIndex;
             mIsResolved = false;
@@ -194,7 +406,9 @@ namespace nap
 
         Controller::ValuePath::ValuePath(ValuePath &&other) : mResolvedPath()
         {
+            mRootID = other.mRootID;
             mPath = other.mPath;
+            mResolvedPath = other.mResolvedPath;
             mIsArrayElement = other.mIsArrayElement;
             mArrayIndex = other.mArrayIndex;
             mIsResolved = false;
@@ -220,12 +434,25 @@ namespace nap
         }
 
 
+        void Controller::ValuePath::set(int arrayIndex)
+        {
+            assert(mIsArrayElement);
+            mArrayIndex = arrayIndex;
+        }
+
+
+        const rtti::Path & Controller::ValuePath::getPath() const
+        {
+            return mPath;
+        }
+
+
         void Controller::ValuePath::resolve(Resource* root)
         {
             mIsResolved = mPath.resolve(root, mResolvedPath);
             if (mIsArrayElement)
             {
-                mPath.pushArrayElement(mArrayIndex);
+                // mPath.pushArrayElement(mArrayIndex);
                 assert(mResolvedPath.getType().is_array());
             }
             assert(mIsResolved);

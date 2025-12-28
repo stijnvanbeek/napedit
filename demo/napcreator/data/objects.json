@@ -182,6 +182,7 @@
                     "Title": "",
                     "Style": "",
                     "ResourceSelector": "Selector",
+                    "Controller": "Controller",
                     "LayoutConstants": "LayoutConstants"
                 },
                 {

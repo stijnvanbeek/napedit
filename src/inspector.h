@@ -58,9 +58,6 @@
             void choosePointer(const rtti::TypeInfo& type);
             void createEmbeddedObject(const rtti::TypeInfo& type);
 
-            template <typename T>
-            void insertArrayElement(T element);
-
             Slot<> mPostResourcesLoadedSlot;
             void onPostResourcesLoaded();
 
@@ -79,20 +76,5 @@
         };
 
 
-        template <typename T>
-        void Inspector::insertArrayElement(T element)
-        {
-            auto array = mSelection.getResolvedPath().getValue();
-            auto view = array.create_array_view();
-            assert(mSelection.getArrayIndex() <= view.get_size());
-            view.insert_value(mSelection.getArrayIndex(), element);
-            mSelection.getResolvedPath().setValue(array);
-            auto arrayPath = mSelection.getPath();
-            arrayPath.popBack();
-            mSelection.set(arrayPath, mSelection.getArrayIndex(), mInspectedResource.get());
-        }
-
-
-    
     }
 }

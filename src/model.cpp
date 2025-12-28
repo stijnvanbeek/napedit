@@ -171,7 +171,7 @@ namespace nap
 		}
 
 
-		void Model::removeEmbeddedObject(const std::string &mID)
+		std::unique_ptr<Resource> Model::removeEmbeddedObject(const std::string &mID)
 		{
 			auto it = std::find_if(mResources.begin(), mResources.end(), [&mID](const auto& resource) { return resource->mID == mID; });
 			assert(it != mResources.end());
@@ -181,8 +181,21 @@ namespace nap
 			bool found = eraseFromTree(*resource);
 			assert(found == false);
 
+			// Save the resource to return it
+			auto result = std::move(*it);
+
 			// Remove from the owned resources list
 			mResources.erase(it);
+
+			return result;
+		}
+
+
+		void Model::addEmbeddedObject(Resource *resource)
+		{
+			auto it = std::find_if(mResources.begin(), mResources.end(), [&resource](const auto& element) { return resource->mID == element->mID; });
+			assert(it == mResources.end());
+			mResources.emplace_back(std::unique_ptr<Resource>(resource));
 		}
 
 

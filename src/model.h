@@ -80,10 +80,18 @@ namespace nap
             Resource* createEmbeddedObject(const rttr::type& type, const std::string& mID = "");
 
             /**
-             * Remove object without that is not present in the tree. Used for deleting embedded objects.
+             * Remove object that is not present in the tree. Used for deleting embedded objects.
              * @param mID Id of the object to be deleted.
+             * @return The resource that was removed, or nullptr if no resource was found with this id.
              */
-            void removeEmbeddedObject(const std::string& mID = "");
+            std::unique_ptr<Resource> removeEmbeddedObject(const std::string& mID = "");
+
+            /**
+             * Add an existing resource as an embedded object to be managed by the model.
+             * The Model takes ownership of the resource.
+             * @param resource Resource to add.
+             */
+            void addEmbeddedObject(Resource* resource);
 
             /**
              * Add existing resource to a group and move it in the tree accordingly.

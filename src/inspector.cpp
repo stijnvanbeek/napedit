@@ -103,9 +103,9 @@ namespace nap
                     if (mSelection.isPointer())
                         mController->setValue(mSelection, resource);
                     else if (mSelection.isArrayElement())
-                        insertArrayElement(resource);
+                        mController->insertArrayElement(mSelection, resource);
                     else if (mSelection.isArray())
-                        addArrayPtrElement(resource);
+                        mController->insertArrayElement(mSelection, resource);
                 }
                 ImGui::EndPopup();
             }
@@ -120,16 +120,7 @@ namespace nap
             if (ImGui::BeginPopup("##ChooseResourceTypePopup"))
             {
                 if (mFilteredMenu.show())
-                {
-                    auto resource = mModel->createEmbeddedObject(rtti::TypeInfo::get_by_name(mFilteredMenu.getSelectedItem()));
-                    assert(resource != nullptr);
-                    if (mSelection.isPointer())
-                        mSelection.getResolvedPath().setValue(resource);
-                    else if (mSelection.isArrayElement())
-                        insertArrayElement(resource);
-                    else if (mSelection.isArray())
-                        addArrayPtrElement(resource);
-                }
+                    mController->createEmbeddedObject(mSelection, rtti::TypeInfo::get_by_name(mFilteredMenu.getSelectedItem()));
                 ImGui::EndPopup();
             }
 
@@ -380,8 +371,7 @@ namespace nap
                     if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
                         mSelection.set(path, mInspectedResource.get());
-                        mModel->removeEmbeddedObject(resource->mID);
-                        mSelection.getResolvedPath().setValue(nullptr);
+                        mController->removeEmbeddedObject(mSelection);
                     }
                 }
             }
@@ -400,7 +390,7 @@ namespace nap
                     if (ImGui::Button(label.c_str(), ImVec2(mLayoutConstants->pointerEditorButtonWidth(), ImGui::GetFrameHeight())))
                     {
                         mSelection.set(path, mInspectedResource.get());
-                        mSelection.getResolvedPath().setValue(nullptr);
+                        mController->setValue(mSelection, nullptr);
                     }
                 }
             }
@@ -441,48 +431,30 @@ namespace nap
             }
             else
             {
-                assert(elementType.can_create_instance());
-                auto element = elementType.create();
-                insertArrayElement(element);
+                mController->insertArrayElement(mSelection);
             }
         }
 
 
         void Inspector::removeArrayElement()
         {
-            auto array = mSelection.getResolvedPath().getValue();
-            auto view = array.create_array_view();
-            assert(array.is_array());
-            view.remove_value(mSelection.getArrayIndex());
-            mSelection.getResolvedPath().setValue(array);
+            mController->removeArrayElement(mSelection);
             mSelection.clear();
         }
 
 
         void Inspector::moveArrayElementUp()
         {
-            auto array = mSelection.getResolvedPath().getValue();
-            auto view = array.create_array_view();
-            auto element = view.get_value(mSelection.getArrayIndex());
-            view.remove_value(mSelection.getArrayIndex());
-            view.insert_value(mSelection.getArrayIndex() - 1, element);
-            mSelection.getResolvedPath().setValue(array);
+            mController->moveArrayElementUp(mSelection);
             auto arrayPath = mSelection.getPath();
-            arrayPath.popBack();
             mSelection.set(arrayPath, mSelection.getArrayIndex() - 1, mInspectedResource.get());
         }
 
 
         void Inspector::moveArrayElementDown()
         {
-            auto array = mSelection.getResolvedPath().getValue();
-            auto view = array.create_array_view();
-            auto element = view.get_value(mSelection.getArrayIndex());
-            view.remove_value(mSelection.getArrayIndex());
-            view.insert_value(mSelection.getArrayIndex() + 1, element);
-            mSelection.getResolvedPath().setValue(array);
+            mController->moveArrayElementDown(mSelection);
             auto arrayPath = mSelection.getPath();
-            arrayPath.popBack();
             mSelection.set(arrayPath, mSelection.getArrayIndex() + 1, mInspectedResource.get());
         }
 
@@ -502,20 +474,14 @@ namespace nap
             else {
                 assert(elementType.can_create_instance());
                 auto element = elementType.create();
-                view.insert_value(view.get_size(), element);
-                mSelection.getResolvedPath().setValue(array);
+                mController->insertArrayElement(mSelection, element);
             }
         }
 
 
         void Inspector::addArrayPtrElement(Resource *resource)
         {
-            auto array = mSelection.getResolvedPath().getValue();
-            auto view = array.create_array_view();
-            auto elementType = view.get_rank_type(1).get_wrapped_type();
-            assert(resource->get_type().is_derived_from(elementType) || resource->get_type() == elementType);
-            view.insert_value(view.get_size(), resource);
-            mSelection.getResolvedPath().setValue(array);
+            mController->insertArrayElement(mSelection, resource);
         }
 
 
