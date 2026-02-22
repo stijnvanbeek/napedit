@@ -172,7 +172,7 @@ namespace nap
         }
 
 
-        bool Inspector::drawObject(rtti::Variant& object, rtti::TypeInfo type, const rtti::Path& path, float nameOffset, float valueOffset, float typeOffset)
+        bool Inspector::drawObject(rtti::Variant& object, rtti::TypeInfo type, const rtti::Path& aPath, float nameOffset, float valueOffset, float typeOffset)
         {
             bool changed = false;
             for (auto& property : type.get_properties())
@@ -182,9 +182,13 @@ namespace nap
                 auto propertyName = property.get_name().to_string();
                 bool embeddedPointer = rtti::hasFlag(property, nap::rtti::EPropertyMetaData::Embedded);
 
-                if (drawValue(propertyValue, propertyType, path, propertyName, false, 0, embeddedPointer, nameOffset, valueOffset, typeOffset))
+                if (drawValue(propertyValue, propertyType, aPath, propertyName, false, 0, embeddedPointer, nameOffset, valueOffset, typeOffset))
                 {
-                    property.set_value(object, propertyValue);
+                    Controller::ValuePath valuePath;
+                    rtti::Path path = aPath;
+                    path.pushAttribute(propertyName);
+                    valuePath.set(path, mInspectedResource.get());
+                    mController->setValue(valuePath, propertyValue);
                     changed = true;
                 }
             }
