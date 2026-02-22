@@ -431,43 +431,64 @@
                             "Type": "nap::gui::Action",
                             "mID": "NewAction",
                             "Key": "N",
-                            "KeyModifier": "Ctrl"
+                            "ModCtrl": false,
+                            "ModShift": false,
+                            "ModAlt": false,
+                            "ModSuper": true
                         },
                         {
                             "Type": "nap::gui::Action",
                             "mID": "OpenAction",
                             "Key": "O",
-                            "KeyModifier": "Ctrl"
+                            "ModCtrl": false,
+                            "ModShift": false,
+                            "ModAlt": false,
+                            "ModSuper": true
                         },
                         {
                             "Type": "nap::gui::Action",
                             "mID": "SaveAction",
                             "Key": "S",
-                            "KeyModifier": "Ctrl"
+                            "ModCtrl": false,
+                            "ModShift": false,
+                            "ModAlt": false,
+                            "ModSuper": true
                         },
                         {
                             "Type": "nap::gui::Action",
                             "mID": "SaveAsAction",
                             "Key": "Unknown",
-                            "KeyModifier": "None"
+                            "ModCtrl": false,
+                            "ModShift": false,
+                            "ModAlt": false,
+                            "ModSuper": false
                         },
                         {
                             "Type": "nap::gui::Action",
                             "mID": "QuitAction",
                             "Key": "Q",
-                            "KeyModifier": "Ctrl"
+                            "ModCtrl": false,
+                            "ModShift": false,
+                            "ModAlt": false,
+                            "ModSuper": true
                         },
                         {
                             "Type": "nap::gui::Action",
                             "mID": "UndoAction",
                             "Key": "Z",
-                            "KeyModifier": "Ctrl"
+                            "ModCtrl": false,
+                            "ModShift": false,
+                            "ModAlt": false,
+                            "ModSuper": true
                         },
                         {
                             "Type": "nap::gui::Action",
                             "mID": "RedoAction",
                             "Key": "R",
-                            "KeyModifier": "Ctrl"
+                            "ModCtrl": false,
+                            "ModShift": true,
+                            "ModAlt": false,
+                            "ModSuper": true
                         }
                     ],
                     "Children": []
