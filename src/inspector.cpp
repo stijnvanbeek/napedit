@@ -172,9 +172,8 @@ namespace nap
         }
 
 
-        bool Inspector::drawObject(rtti::Variant& object, rtti::TypeInfo type, const rtti::Path& aPath, float nameOffset, float valueOffset, float typeOffset)
+        void Inspector::drawObject(rtti::Variant& object, rtti::TypeInfo type, const rtti::Path& aPath, float nameOffset, float valueOffset, float typeOffset)
         {
-            bool changed = false;
             for (auto& property : type.get_properties())
             {
                 auto propertyValue = property.get_value(object);
@@ -184,15 +183,14 @@ namespace nap
 
                 if (drawValue(propertyValue, propertyType, aPath, propertyName, false, 0, embeddedPointer, nameOffset, valueOffset, typeOffset))
                 {
+                    // property.set_value(object, propertyValue);
                     Controller::ValuePath valuePath;
                     rtti::Path path = aPath;
                     path.pushAttribute(propertyName);
                     valuePath.set(path, mInspectedResource.get());
                     mController->setValue(valuePath, propertyValue);
-                    changed = true;
                 }
             }
-            return changed;
         }
 
 
@@ -255,8 +253,7 @@ namespace nap
             else if (type.is_derived_from<rtti::ObjectPtrBase>())
             {
                 // Draw resource pointer
-                if (drawPointer(value, type, path, name, isEmbeddedPointer, valueWidth))
-                    valueChanged = true;
+                drawPointer(value, type, path, name, isEmbeddedPointer, valueWidth);
             }
             else if (!type.is_array() && !type.is_class())
             {
@@ -288,16 +285,12 @@ namespace nap
                     if (embeddedObject != nullptr)
                     {
                         rtti::Variant var = embeddedObject;
-                        if (drawObject(var, embeddedObject->get_type(), path, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset))
-                        {
-                            valueChanged = true;
-                        }
+                        drawObject(var, embeddedObject->get_type(), path, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset);
                     }
                 }
                 else {
                     // Draw nested object
-                    if (drawObject(value, type, path, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset))
-                        valueChanged = true;
+                    drawObject(value, type, path, nameOffset + mLayoutConstants->nameColumnIndent(), valueOffset, typeOffset);
                 }
                 ImGui::TreePop();
             }
@@ -346,7 +339,7 @@ namespace nap
         }
 
 
-        bool Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path, const std::string& name, bool isEmbedded, float valueWidth)
+        void Inspector::drawPointer(rtti::Variant &var, rtti::TypeInfo type, const rtti::Path &path, const std::string& name, bool isEmbedded, float valueWidth)
         {
             assert(var.get_type().is_wrapper());
             rtti::Object* resource = var.get_value<rtti::ObjectPtr<rtti::Object>>().get();
@@ -400,7 +393,6 @@ namespace nap
             }
 
             ImGui::PopStyleVar();
-            return false;
         }
 
 
@@ -416,7 +408,7 @@ namespace nap
                 auto newID = std::string(buffer);
                 mModel->renameResource(oldID, newID);
                 if (parentPath.getLength() == 0) // Are we editing the ID of the selected resource?
-                    mResourceSelector->set(value.to_string());
+                    mResourceSelector->set(newID);
             }
         }
 

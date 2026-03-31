@@ -41,11 +41,11 @@
 
             void drawContextMenu();
 
-            bool drawObject(rtti::Variant& object, rtti::TypeInfo type, const rtti::Path& path, float nameOffset, float valueOffset, float typeOffset);
+            void drawObject(rtti::Variant& object, rtti::TypeInfo type, const rtti::Path& path, float nameOffset, float valueOffset, float typeOffset);
             bool drawValue(rtti::Variant& value, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, bool isArrayElement, int arrayIndex, bool isEmbeddedPointer, float nameOffset, float valueOffset, float typeOffset);
             bool drawArray(rtti::Variant& array, const rtti::Path& path, const std::string& name, bool isEmbeddedPointerArray, float nameOffset, float valueOffset, float typeOffset);
             bool drawEnum(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, float valueWidth);
-            bool drawPointer(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, bool isEmbedded, float valueWidth);
+            void drawPointer(rtti::Variant& var, rtti::TypeInfo type, const rtti::Path& path, const std::string& name, bool isEmbedded, float valueWidth);
             void drawID(rtti::Variant& value, const rtti::Path& parentPath, float width);
 
             void insertArrayElement();
