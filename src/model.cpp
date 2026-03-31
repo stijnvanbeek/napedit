@@ -303,6 +303,9 @@ namespace nap
 				}
 			}
 
+			// Emit the signal to notify the Selector
+			mResourceRemovedSignal.trigger(mID);
+
 			// Finally remove the resource itself
 			mResources.erase(it);
 		}
@@ -315,6 +318,9 @@ namespace nap
 			auto newName = getUniqueID(aNewName);
 			if (!newName.empty())
 				resource->mID = newName;
+
+			// Emit the signal to notify the Selector
+			mResourceRenamedSignal.trigger(mID, newName);
 		}
 
 
@@ -597,6 +603,30 @@ namespace nap
 			mSerializedData.clear();
 		}
 
+
+
+		bool Selector::init(utility::ErrorState &errorState)
+		{
+			mModel->mResourceRemovedSignal.connect(mResourceRemovedSlot);
+
+			mResourceRenamedSlot.setFunction([&](const std::string& oldName, const std::string& newName){ onResourceRenamed(oldName, newName); });
+			mModel->mResourceRenamedSignal.connect(mResourceRenamedSlot);
+			return true;
+		}
+
+
+		void Selector::onResourceRemoved(const std::string &mID)
+		{
+			if (mSelection == mID)
+				mSelection.clear();
+		}
+
+
+		void Selector::onResourceRenamed(const std::string& oldID, const std::string& newID)
+		{
+			if (mSelection == oldID)
+				mSelection = newID;
+		}
 
 	}
 

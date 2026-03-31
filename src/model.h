@@ -187,7 +187,21 @@ namespace nap
             bool loadFromFile(const std::string& path, utility::ErrorState &errorState);
             bool saveToFile(const std::string& path, utility::ErrorState &errorState);
 
+            // Signal emitted when the model is cleared.
             Signal<> mClearedSignal;
+
+            /**
+             * Signal emitted when a resource is removed.
+             * @param mID ID of the removed resource.
+             */
+            Signal<const std::string&> mResourceRemovedSignal;
+
+            /**
+             * Signal emitted when a resource is renamed.
+             * @param oldID ID of the renamed resource.
+             * @param newID name of the resource.
+             */
+            Signal<const std::string&, const std::string&> mResourceRenamedSignal;
 
         private:
             bool eraseFromTree(std::vector<ResourcePtr<Resource>>& branch, Object& resource);
@@ -224,6 +238,9 @@ namespace nap
         public:
             ResourcePtr<Model> mModel; ///< Property: 'Model' Pointer to the Model the resource is selected from
 
+            // Inherited from Resource
+            bool init(utility::ErrorState &errorState) override;
+
             /**
              * Selects a resource
              * @param mID Unique ID of the selected resource
@@ -250,6 +267,12 @@ namespace nap
             bool empty() const { return mSelection.empty(); }
 
         private:
+            Slot<const std::string&> mResourceRemovedSlot = { this, &Selector::onResourceRemoved };
+            void onResourceRemoved(const std::string& mID);
+
+            Slot<const std::string&, const std::string&> mResourceRenamedSlot;
+            void onResourceRenamed(const std::string& oldID, const std::string& newID);
+
             std::string mSelection;
         };
 
